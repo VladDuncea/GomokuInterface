@@ -1,11 +1,12 @@
 #include "Texture.h"
 
-Texture::Texture()
+Texture::Texture(GameWindow &gw) : gameWindow(gw)
 {
 	//Initialize
 	mTexture = NULL;
-	mWidth = 0;
-	mHeight = 0;
+	privWidth = 0;
+	privHeight = 0;
+
 }
 
 Texture::~Texture()
@@ -34,7 +35,7 @@ bool Texture::loadFromFile(std::string path)
 		SDL_SetColorKey(loadedSurface, SDL_TRUE, SDL_MapRGB(loadedSurface->format, 0, 0xFF, 0xFF));
 
 		//Create texture from surface pixels
-		newTexture = SDL_CreateTextureFromSurface(gRenderer, loadedSurface);
+		newTexture = SDL_CreateTextureFromSurface(gameWindow.renderer(), loadedSurface);
 		if (newTexture == NULL)
 		{
 			printf("Unable to create texture from %s! SDL Error: %s\n", path.c_str(), SDL_GetError());
@@ -42,8 +43,8 @@ bool Texture::loadFromFile(std::string path)
 		else
 		{
 			//Get image dimensions
-			mWidth = loadedSurface->w;
-			mHeight = loadedSurface->h;
+			privWidth = loadedSurface->w;
+			privHeight = loadedSurface->h;
 		}
 
 		//Get rid of old loaded surface
@@ -98,8 +99,8 @@ void Texture::free()
 	{
 		SDL_DestroyTexture(mTexture);
 		mTexture = NULL;
-		mWidth = 0;
-		mHeight = 0;
+		privWidth = 0;
+		privHeight = 0;
 	}
 }
 
@@ -124,7 +125,7 @@ void Texture::setAlpha(Uint8 alpha)
 void Texture::render(int x, int y, SDL_Rect* clip, double angle, SDL_Point* center, SDL_RendererFlip flip)
 {
 	//Set rendering space and render to screen
-	SDL_Rect renderQuad = { x, y, mWidth, mHeight };
+	SDL_Rect renderQuad = { x, y, privWidth, privHeight };
 
 	//Set clip rendering dimensions
 	if (clip != NULL)
@@ -134,15 +135,15 @@ void Texture::render(int x, int y, SDL_Rect* clip, double angle, SDL_Point* cent
 	}
 
 	//Render to screen
-	SDL_RenderCopyEx(gRenderer, mTexture, clip, &renderQuad, angle, center, flip);
+	SDL_RenderCopyEx(gameWindow.renderer(), mTexture, clip, &renderQuad, angle, center, flip);
 }
 
 int Texture::getWidth()
 {
-	return mWidth;
+	return privWidth;
 }
 
 int Texture::getHeight()
 {
-	return mHeight;
+	return privHeight;
 }

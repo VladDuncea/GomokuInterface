@@ -1,6 +1,6 @@
 #include "GameWindow.h"
 
-bool init()
+GameWindow::GameWindow(int screen_width,int screen_height): SCREEN_HEIGHT(screen_height),SCREEN_WIDTH(screen_width)
 {
 	//Initialization flag
 	bool success = true;
@@ -20,8 +20,8 @@ bool init()
 		}
 
 		//Create window
-		gWindow = SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
-		if (gWindow == NULL)
+		privWindow = SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screen_width, screen_height, SDL_WINDOW_SHOWN);
+		if (privWindow == NULL)
 		{
 			printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
 			success = false;
@@ -29,8 +29,8 @@ bool init()
 		else
 		{
 			//Create vsynced renderer for window
-			gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-			if (gRenderer == NULL)
+			privRenderer = SDL_CreateRenderer(privWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+			if (renderer == NULL)
 			{
 				printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
 				success = false;
@@ -38,7 +38,7 @@ bool init()
 			else
 			{
 				//Initialize renderer color
-				SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+				SDL_SetRenderDrawColor(privRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 
 				//Initialize PNG loading
 				int imgFlags = IMG_INIT_PNG;
@@ -50,16 +50,41 @@ bool init()
 			}
 		}
 	}
-
-	return success;
-}
-
-
-GameWindow::GameWindow()
-{
+	if (success == false)
+		throw -1;
 }
 
 
 GameWindow::~GameWindow()
 {
+	//Free loaded images
+	//gButtonSpriteSheetTexture.free();
+
+	//Destroy window	
+	SDL_DestroyRenderer(privRenderer);
+	SDL_DestroyWindow(privWindow);
+
+	//Quit SDL subsystems
+	IMG_Quit();
+	SDL_Quit();
+}
+
+int GameWindow::width() const
+{
+	return SCREEN_WIDTH;
+}
+
+int GameWindow::height() const
+{
+	return SCREEN_HEIGHT;
+}
+
+SDL_Renderer * GameWindow::renderer() const
+{
+	return privRenderer;
+}
+
+SDL_Window * GameWindow::window() const
+{
+	return privWindow;
 }

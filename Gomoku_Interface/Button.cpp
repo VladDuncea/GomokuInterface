@@ -1,11 +1,10 @@
 #include "Button.h"
 
 
-Button::Button()
+Button::Button(GameWindow &gw) : game_window(gw), BUTTON_HEIGHT(game_window.height() / 20), BUTTON_WIDTH(game_window.width() / 20)
 {
-	mPosition.x = 0;
+	mPosition.x=0;
 	mPosition.y = 0;
-
 	mCurrentSprite = BUTTON_SPRITE_MOUSE_OUT;
 }
 
@@ -78,5 +77,5 @@ void Button::handleEvent(SDL_Event* e)
 void Button::render()
 {
 	//Show current button sprite
-	gButtonSpriteSheetTexture.render(mPosition.x, mPosition.y, &gSpriteClips[mCurrentSprite]);
+	//gButtonSpriteSheetTexture.render(mPosition.x, mPosition.y, &gSpriteClips[mCurrentSprite]);
 }

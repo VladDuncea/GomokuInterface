@@ -3,12 +3,24 @@
 #include <SDL_image.h>
 #include <stdio.h>
 #include <string>
+#include "GameWindow.h"
 //Texture wrapper class
 class Texture
 {
+
+private:
+	//The actual hardware texture
+	SDL_Texture* mTexture;
+
+	//Image dimensions
+	int privWidth;
+	int privHeight;
+	GameWindow & gameWindow;
+
+
 public:
 	//Initializes variables
-	Texture();
+	Texture(GameWindow &gw);
 
 	//Deallocates memory
 	~Texture();
@@ -39,12 +51,4 @@ public:
 	//Gets image dimensions
 	int getWidth();
 	int getHeight();
-
-private:
-	//The actual hardware texture
-	SDL_Texture* mTexture;
-
-	//Image dimensions
-	int mWidth;
-	int mHeight;
 };
