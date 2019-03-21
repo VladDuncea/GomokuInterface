@@ -30,7 +30,7 @@ GameWindow::GameWindow(int screen_width,int screen_height): SCREEN_HEIGHT(screen
 		{
 			//Create vsynced renderer for window
 			privRenderer = SDL_CreateRenderer(privWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-			if (renderer == NULL)
+			if (privRenderer == NULL)
 			{
 				printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
 				success = false;

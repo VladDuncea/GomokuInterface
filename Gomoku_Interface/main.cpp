@@ -1,9 +1,11 @@
 #include <iostream>
 #include "GameWindow.h"
+#include "Texture.h"
+#include "GridSquare.h"
 #include <vector>
 
-#define GRID_WIDTH  4
-#define GRID_HEIGHT  4
+#define GRID_WIDTH  19
+#define GRID_HEIGHT  19
 #define TOTAL_BUTTONS GRID_HEIGHT*GRID_WIDTH
 
 enum ButtonSprite
@@ -52,11 +54,11 @@ int main(int argc, char* args[])
 {
 	
 	//Start up SDL and create game window
-	GameWindow gw(640, 480);
-
+	GameWindow gw(950, 950);
+	
 	//Load assets
 
-		//Button sprites
+	//Button sprites
 	
 	Texture ButtonSpriteSheet(gw);
 	try
@@ -69,22 +71,31 @@ int main(int argc, char* args[])
 		exit(-1);
 	}
 	//Mouse button sprites
-	SDL_Rect gSpriteClips[BUTTON_SPRITE_TOTAL];
+	SDL_Rect spriteClips[BUTTON_SPRITE_TOTAL];
+	
+	
 
-
+	//Select sprites in sprite sheet
 	for (int i = 0; i < BUTTON_SPRITE_TOTAL; ++i)
 	{
-		gSpriteClips[i].x = 0;
-		gSpriteClips[i].y = i * 200;
-		gSpriteClips[i].w = 200;
-		gSpriteClips[i].h = 200;
+		spriteClips[i].x = 0;
+		spriteClips[i].y = i * 200;
+		spriteClips[i].w = 300;
+		spriteClips[i].h = 200;
 	}
 
+	//All the squares in the grid
+	std::vector<GridSquare> gridSquares;
 	//Set buttons in corners
-	gButtons[0].setPosition(0, 0);
-	gButtons[1].setPosition(gw.width() - BUTTON_WIDTH, 0);
-	gButtons[2].setPosition(0, gw.height() - BUTTON_HEIGHT);
-	gButtons[3].setPosition(gw.width() - BUTTON_WIDTH, gw.height() - BUTTON_HEIGHT);
+	GridSquare gs(gw, gw.height() / GRID_HEIGHT, gw.width() / GRID_WIDTH, BUTTON_SPRITE_TOTAL, ButtonSpriteSheet,spriteClips);
+	for (int i = 0; i < GRID_HEIGHT; i++)
+	{
+		for (int j = 0; j < GRID_WIDTH; j++)
+		{
+			gs.setPosition(gs.width()*j, gs.height()*i);
+			gridSquares.push_back(gs);
+		}
+	}
 
 	//Main loop flag
 	bool quit = false;
@@ -104,25 +115,59 @@ int main(int argc, char* args[])
 				quit = true;
 			}
 
-			//Handle button events
-			for (int i = 0; i < TOTAL_BUTTONS; ++i)
+			//If mouse event happened
+			if (e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP)
 			{
-				gButtons[i].handleEvent(&e);
+				gw.clear();
+				//Get mouse position
+				int x, y;
+				//Get mouse and account for out of bouds
+				SDL_GetMouseState(&x, &y);
+				
+				printf("x: %d y:%d\n", x, y);
+				//Get button coordinates
+				x /= gridSquares[0].width();
+				y /= gridSquares[0].height();
+				int buttonNr = y * GRID_WIDTH + x;
+				//Set all grid squares to empty
+				for (int i = 0; i < GRID_HEIGHT*GRID_WIDTH; i++)
+				{
+					gridSquares[i].setSprite(0);
+				}
+				if(buttonNr<=360)
+					gridSquares[buttonNr].setSprite(1);
+
+				//Render the grid
+				for (int i = 0; i < GRID_HEIGHT*GRID_WIDTH; i++)
+				{
+					gridSquares[i].render(gw.width()/GRID_WIDTH,gw.height()/GRID_HEIGHT);
+				}
+				/*
+				//Mouse is inside button
+				else
+				{
+					//Set mouse over sprite
+					switch (e.type)
+					{
+					case SDL_MOUSEMOTION:
+						mCurrentSprite = BUTTON_SPRITE_MOUSE_OVER_MOTION;
+						break;
+
+					case SDL_MOUSEBUTTONDOWN:
+						mCurrentSprite = BUTTON_SPRITE_MOUSE_DOWN;
+						break;
+
+					case SDL_MOUSEBUTTONUP:
+						mCurrentSprite = BUTTON_SPRITE_MOUSE_UP;
+						break;
+					}
+				}*/
+
+				gw.update();
 			}
+
 		}
-
-		//Clear screen
-		gw.clear();
-
-		//Render buttons
-		for (int i = 0; i < TOTAL_BUTTONS; ++i)
-		{
-			gButtons[i].render();
-		}
-
-		//Update screen
-		gw.update();
 	}
-
+	
 	return 0;
 }

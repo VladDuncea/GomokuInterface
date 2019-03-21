@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <string>
 #include "GameWindow.h"
+#include "Texture.h"
+
 //The mouse button
 class GridSquare
 {
@@ -11,7 +13,6 @@ class GridSquare
 	//Button constants
 	const int BUTTON_WIDTH;
 	const int BUTTON_HEIGHT;
-	const int TOTAL_BUTTONS=4;
 	const int TOTAL_STATES;
 
 	//Top left position
@@ -23,21 +24,27 @@ class GridSquare
 	//Reference to game window
 	GameWindow &game_window;
 
-	//REference to sprite texture
+	//Reference to sprite texture
 	Texture & gridsprite;
+
+	//Reference to sprite rect
+	SDL_Rect *spriteClips;
 
 public:
 	//Initializes internal variables
-	GridSquare(GameWindow& gw,const int buttonHeight,const int buttonWidth,const int nrStates);
+	GridSquare(GameWindow& gw,const int buttonHeight,const int buttonWidth,const int nrStates,Texture &spriteSheet, SDL_Rect *spriteClips);
 
 	//Sets top left position
 	void setPosition(int x, int y);
 
-	//Handles mouse event
-	void handleEvent(SDL_Event* e);
+	int width();
+	int height();
+
+	//Modify shown sprite
+	void setSprite(int n);
 
 	//Shows button sprite
-	void render();
+	void render(int width,int height);
 
 
 };

@@ -4,8 +4,6 @@
 #include <stdio.h>
 #include <string>
 #include <exception>
-#include "Texture.h"
-#include "GridSquare.h"
 
 class GameWindow
 {
@@ -15,7 +13,9 @@ class GameWindow
 	//The window renderer
 	SDL_Renderer* privRenderer;
 
+	//Width and height of game window
 	const int SCREEN_WIDTH, SCREEN_HEIGHT;
+
 
 	GameWindow(GameWindow &gw):SCREEN_HEIGHT(0),SCREEN_WIDTH(0) {};
 

@@ -32,7 +32,11 @@ bool Texture::loadFromFile(std::string path)
 	else
 	{
 		//Color key image
-		SDL_SetColorKey(loadedSurface, SDL_TRUE, SDL_MapRGB(loadedSurface->format, 0, 0xFF, 0xFF));
+		//SDL_SetColorKey(loadedSurface, SDL_TRUE, SDL_MapRGB(loadedSurface->format, 0, 0xFF, 0xFF));
+
+		//Scale image to dimensions
+		
+		//SDL_BlitScaled(gStretchedSurface, NULL, gScreenSurface, &stretchRect);
 
 		//Create texture from surface pixels
 		newTexture = SDL_CreateTextureFromSurface(gameWindow.renderer(), loadedSurface);
@@ -122,7 +126,7 @@ void Texture::setAlpha(Uint8 alpha)
 	SDL_SetTextureAlphaMod(mTexture, alpha);
 }
 
-void Texture::render(int x, int y, SDL_Rect* clip, double angle, SDL_Point* center, SDL_RendererFlip flip)
+void Texture::render(int x, int y, SDL_Rect* clip,int width,int height)
 {
 	//Set rendering space and render to screen
 	SDL_Rect renderQuad = { x, y, privWidth, privHeight };
@@ -130,12 +134,12 @@ void Texture::render(int x, int y, SDL_Rect* clip, double angle, SDL_Point* cent
 	//Set clip rendering dimensions
 	if (clip != NULL)
 	{
-		renderQuad.w = clip->w;
-		renderQuad.h = clip->h;
+		renderQuad.w = width;
+		renderQuad.h = height;
 	}
 
 	//Render to screen
-	SDL_RenderCopyEx(gameWindow.renderer(), mTexture, clip, &renderQuad, angle, center, flip);
+	SDL_RenderCopyEx(gameWindow.renderer(), mTexture, clip, &renderQuad, 0.0, NULL, SDL_FLIP_NONE);
 }
 
 int Texture::getWidth()
