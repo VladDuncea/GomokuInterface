@@ -79,6 +79,17 @@ int GameWindow::height() const
 	return SCREEN_HEIGHT;
 }
 
+void GameWindow::clear()
+{
+	SDL_SetRenderDrawColor(privRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+	SDL_RenderClear(privRenderer);
+}
+
+void GameWindow::update()
+{
+	SDL_RenderPresent(privRenderer);
+}
+
 SDL_Renderer * GameWindow::renderer() const
 {
 	return privRenderer;

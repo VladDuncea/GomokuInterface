@@ -1,20 +1,20 @@
-#include "Button.h"
+#include "GridSquare.h"
 
 
-Button::Button(GameWindow &gw) : game_window(gw), BUTTON_HEIGHT(game_window.height() / 20), BUTTON_WIDTH(game_window.width() / 20)
+GridSquare::GridSquare(GameWindow &gw, const int buttonHeight, const int buttonWidth,const int nrStates) : game_window(gw), BUTTON_HEIGHT(buttonHeight), BUTTON_WIDTH(buttonWidth),TOTAL_STATES(nrStates)
 {
-	mPosition.x=0;
-	mPosition.y = 0;
-	mCurrentSprite = BUTTON_SPRITE_MOUSE_OUT;
+	privPosition.x=0;
+	privPosition.y = 0;
+	privCurrentSprite = 0;
 }
 
-void Button::setPosition(int x, int y)
+void GridSquare::setPosition(int x, int y)
 {
-	mPosition.x = x;
-	mPosition.y = y;
+	privPosition.x = x;
+	privPosition.y = y;
 }
 
-void Button::handleEvent(SDL_Event* e)
+void GridSquare::handleEvent(SDL_Event* e)
 {
 	//If mouse event happened
 	if (e->type == SDL_MOUSEMOTION || e->type == SDL_MOUSEBUTTONDOWN || e->type == SDL_MOUSEBUTTONUP)
@@ -27,22 +27,22 @@ void Button::handleEvent(SDL_Event* e)
 		bool inside = true;
 
 		//Mouse is left of the button
-		if (x < mPosition.x)
+		if (x < privPosition.x)
 		{
 			inside = false;
 		}
 		//Mouse is right of the button
-		else if (x > mPosition.x + BUTTON_WIDTH)
+		else if (x > privPosition.x + BUTTON_WIDTH)
 		{
 			inside = false;
 		}
 		//Mouse above the button
-		else if (y < mPosition.y)
+		else if (y < privPosition.y)
 		{
 			inside = false;
 		}
 		//Mouse below the button
-		else if (y > mPosition.y + BUTTON_HEIGHT)
+		else if (y > privPosition.y + BUTTON_HEIGHT)
 		{
 			inside = false;
 		}
@@ -50,7 +50,7 @@ void Button::handleEvent(SDL_Event* e)
 		//Mouse is outside button
 		if (!inside)
 		{
-			mCurrentSprite = BUTTON_SPRITE_MOUSE_OUT;
+			privCurrentSprite = BUTTON_SPRITE_MOUSE_OUT;
 		}
 		//Mouse is inside button
 		else
@@ -74,7 +74,7 @@ void Button::handleEvent(SDL_Event* e)
 	}
 }
 
-void Button::render()
+void GridSquare::render()
 {
 	//Show current button sprite
 	//gButtonSpriteSheetTexture.render(mPosition.x, mPosition.y, &gSpriteClips[mCurrentSprite]);

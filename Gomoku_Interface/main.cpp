@@ -1,9 +1,10 @@
 #include <iostream>
 #include "GameWindow.h"
+#include <vector>
 
-#define TOTAL_BUTTON_TYPES  4
 #define GRID_WIDTH  4
 #define GRID_HEIGHT  4
+#define TOTAL_BUTTONS GRID_HEIGHT*GRID_WIDTH
 
 enum ButtonSprite
 {
@@ -14,16 +15,7 @@ enum ButtonSprite
 	BUTTON_SPRITE_TOTAL = 4
 };
 
-//Using SDL, SDL_image, standard IO, and strings
-
-
-
-
-
-//Mouse button sprites
-//SDL_Rect gSpriteClips[BUTTON_SPRITE_TOTAL];
-
-
+//Using SDL, SDL_image, standard IO, and string
 //Buttons objects
 //LButton gButtons[TOTAL_BUTTONS];
 
@@ -64,7 +56,7 @@ int main(int argc, char* args[])
 
 	//Load assets
 
-	//Button sprites
+		//Button sprites
 	
 	Texture ButtonSpriteSheet(gw);
 	try
@@ -76,20 +68,23 @@ int main(int argc, char* args[])
 		printf("Failed to load button sprite texture!\n");
 		exit(-1);
 	}
+	//Mouse button sprites
+	SDL_Rect gSpriteClips[BUTTON_SPRITE_TOTAL];
 
-	for (int i = 0; i < TOTAL_BUTTON_TYPES; ++i)
+
+	for (int i = 0; i < BUTTON_SPRITE_TOTAL; ++i)
 	{
 		gSpriteClips[i].x = 0;
 		gSpriteClips[i].y = i * 200;
-		gSpriteClips[i].w = BUTTON_WIDTH;
-		gSpriteClips[i].h = BUTTON_HEIGHT;
+		gSpriteClips[i].w = 200;
+		gSpriteClips[i].h = 200;
 	}
 
 	//Set buttons in corners
 	gButtons[0].setPosition(0, 0);
-	gButtons[1].setPosition(SCREEN_WIDTH - BUTTON_WIDTH, 0);
-	gButtons[2].setPosition(0, SCREEN_HEIGHT - BUTTON_HEIGHT);
-	gButtons[3].setPosition(SCREEN_WIDTH - BUTTON_WIDTH, SCREEN_HEIGHT - BUTTON_HEIGHT);
+	gButtons[1].setPosition(gw.width() - BUTTON_WIDTH, 0);
+	gButtons[2].setPosition(0, gw.height() - BUTTON_HEIGHT);
+	gButtons[3].setPosition(gw.width() - BUTTON_WIDTH, gw.height() - BUTTON_HEIGHT);
 
 	//Main loop flag
 	bool quit = false;
@@ -117,8 +112,7 @@ int main(int argc, char* args[])
 		}
 
 		//Clear screen
-		SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
-		SDL_RenderClear(gRenderer);
+		gw.clear();
 
 		//Render buttons
 		for (int i = 0; i < TOTAL_BUTTONS; ++i)
@@ -127,11 +121,8 @@ int main(int argc, char* args[])
 		}
 
 		//Update screen
-		SDL_RenderPresent(gRenderer);
+		gw.update();
 	}
-
-	//Free resources and close SDL
-	close();
 
 	return 0;
 }

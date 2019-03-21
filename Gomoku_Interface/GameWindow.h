@@ -5,7 +5,7 @@
 #include <string>
 #include <exception>
 #include "Texture.h"
-#include "Button.h"
+#include "GridSquare.h"
 
 class GameWindow
 {
@@ -25,6 +25,8 @@ public:
 
 	int width()  const;
 	int height() const;
+	void clear();
+	void update();
 	SDL_Renderer * renderer() const;
 	SDL_Window * window() const;
 };

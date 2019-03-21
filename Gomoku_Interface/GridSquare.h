@@ -5,25 +5,30 @@
 #include <string>
 #include "GameWindow.h"
 //The mouse button
-class Button
+class GridSquare
 {
+
 	//Button constants
 	const int BUTTON_WIDTH;
 	const int BUTTON_HEIGHT;
 	const int TOTAL_BUTTONS=4;
+	const int TOTAL_STATES;
 
 	//Top left position
-	SDL_Point mPosition;
+	SDL_Point privPosition;
 
-	//Currently used global sprite
-	ButtonSprite mCurrentSprite;
+	//Currently used sprite
+	int privCurrentSprite;
 
 	//Reference to game window
 	GameWindow &game_window;
 
+	//REference to sprite texture
+	Texture & gridsprite;
+
 public:
 	//Initializes internal variables
-	Button(GameWindow& gw);
+	GridSquare(GameWindow& gw,const int buttonHeight,const int buttonWidth,const int nrStates);
 
 	//Sets top left position
 	void setPosition(int x, int y);
