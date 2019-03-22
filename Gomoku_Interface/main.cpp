@@ -16,6 +16,13 @@ enum ButtonSprite
 	BUTTON_SPRITE_TOTAL = 3
 };
 
+enum Players
+{
+	PLAYER_BLUE = 0,
+	PLAYER_RED = 1,
+	PLAYER_TOTAL = 2
+};
+
 
 int main(int argc, char* args[])
 {
@@ -70,9 +77,16 @@ int main(int argc, char* args[])
 	//Event handler
 	SDL_Event e;
 
+	//Set win variable
+	bool win = false;
+
+	//Set player turn to a random number between 0 and 1
+	Players playerTurn = PLAYER_BLUE;
+
 	//While application is running
 	while (!quit)
 	{
+		
 		//Handle events on queue
 		while (SDL_PollEvent(&e) != 0)
 		{
@@ -82,13 +96,13 @@ int main(int argc, char* args[])
 				quit = true;
 			}
 
-			//If mouse event happened
-			if (e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP)
+			//If mouse event happened and the game is not over
+			if (!win & (e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN))
 			{
 				gw.clear();
 				//Get mouse position
 				int x, y;
-				//Get mouse and account for out of bouds
+				//Get mouse
 				SDL_GetMouseState(&x, &y);
 				
 				printf("x: %d y:%d\n", x, y);
@@ -101,8 +115,24 @@ int main(int argc, char* args[])
 				{
 					gridSquares[i].setSprite(GRID_DEFAULT);
 				}
-				if(buttonNr<=360)
-					gridSquares[buttonNr].setSprite(GRID_RED_PIECE);
+				//Account for possible out of bounds
+				if (buttonNr <= 360)
+				{
+					if (playerTurn == PLAYER_BLUE)
+						gridSquares[buttonNr].setSprite(GRID_BLUE_PIECE);
+					else
+						gridSquares[buttonNr].setSprite(GRID_RED_PIECE);
+					if (e.type == SDL_MOUSEBUTTONDOWN)
+					{
+						if (!gridSquares[buttonNr].locked())
+						{
+							gridSquares[buttonNr].locked(true);
+							playerTurn = playerTurn == PLAYER_RED ? PLAYER_BLUE : PLAYER_RED;
+						}
+					}
+					
+				}
+					
 
 				//Render the grid
 				for (int i = 0; i < GRID_HEIGHT*GRID_WIDTH; i++)

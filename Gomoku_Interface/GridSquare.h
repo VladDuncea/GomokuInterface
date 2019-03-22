@@ -15,6 +15,9 @@ class GridSquare
 	const int BUTTON_HEIGHT;
 	const int TOTAL_STATES;
 
+	//Lock the square once it is chosen
+	bool privLocked;
+
 	//Top left position
 	SDL_Point privPosition;
 
@@ -42,6 +45,11 @@ public:
 
 	//Modify shown sprite
 	void setSprite(int n);
+
+	//Setter and getter for locked state
+	void locked(bool newState);
+
+	bool locked();
 
 	//Shows button sprite
 	void render(int width,int height);
