@@ -10,51 +10,18 @@
 
 enum ButtonSprite
 {
-	BUTTON_SPRITE_MOUSE_OUT = 0,
-	BUTTON_SPRITE_MOUSE_OVER_MOTION = 1,
-	BUTTON_SPRITE_MOUSE_DOWN = 2,
-	BUTTON_SPRITE_MOUSE_UP = 3,
-	BUTTON_SPRITE_TOTAL = 4
+	GRID_DEFAULT = 0,
+	GRID_BLUE_PIECE= 1,
+	GRID_RED_PIECE = 2,
+	BUTTON_SPRITE_TOTAL = 3
 };
-
-//Using SDL, SDL_image, standard IO, and string
-//Buttons objects
-//LButton gButtons[TOTAL_BUTTONS];
-
-/*
-bool loadAssets()
-{
-	//Loading success flag
-	bool success = true;
-
-	//Load sprites
-		//Set sprites
-		for (int i = 0; i < BUTTON_SPRITE_TOTAL; ++i)
-		{
-			gSpriteClips[i].x = 0;
-			gSpriteClips[i].y = i * 200;
-			gSpriteClips[i].w = BUTTON_WIDTH;
-			gSpriteClips[i].h = BUTTON_HEIGHT;
-		}
-
-		//Set buttons in corners
-		gButtons[0].setPosition(0, 0);
-		gButtons[1].setPosition(SCREEN_WIDTH - BUTTON_WIDTH, 0);
-		gButtons[2].setPosition(0, SCREEN_HEIGHT - BUTTON_HEIGHT);
-		gButtons[3].setPosition(SCREEN_WIDTH - BUTTON_WIDTH, SCREEN_HEIGHT - BUTTON_HEIGHT);
-	}
-
-	if (!success)
-		throw - 1;
-}*/
-
 
 
 int main(int argc, char* args[])
 {
 	
 	//Start up SDL and create game window
-	GameWindow gw(950, 950);
+	GameWindow gw(GRID_HEIGHT*30, GRID_WIDTH*30);
 	
 	//Load assets
 
@@ -63,7 +30,7 @@ int main(int argc, char* args[])
 	Texture ButtonSpriteSheet(gw);
 	try
 	{
-		ButtonSpriteSheet.loadFromFile("button.png");
+		ButtonSpriteSheet.loadFromFile("piece.png");
 	}
 	catch (int e)
 	{
@@ -79,9 +46,9 @@ int main(int argc, char* args[])
 	for (int i = 0; i < BUTTON_SPRITE_TOTAL; ++i)
 	{
 		spriteClips[i].x = 0;
-		spriteClips[i].y = i * 200;
-		spriteClips[i].w = 300;
-		spriteClips[i].h = 200;
+		spriteClips[i].y = i * 50;
+		spriteClips[i].w = 50;
+		spriteClips[i].h = 50;
 	}
 
 	//All the squares in the grid
@@ -132,37 +99,16 @@ int main(int argc, char* args[])
 				//Set all grid squares to empty
 				for (int i = 0; i < GRID_HEIGHT*GRID_WIDTH; i++)
 				{
-					gridSquares[i].setSprite(0);
+					gridSquares[i].setSprite(GRID_DEFAULT);
 				}
 				if(buttonNr<=360)
-					gridSquares[buttonNr].setSprite(1);
+					gridSquares[buttonNr].setSprite(GRID_RED_PIECE);
 
 				//Render the grid
 				for (int i = 0; i < GRID_HEIGHT*GRID_WIDTH; i++)
 				{
 					gridSquares[i].render(gw.width()/GRID_WIDTH,gw.height()/GRID_HEIGHT);
 				}
-				/*
-				//Mouse is inside button
-				else
-				{
-					//Set mouse over sprite
-					switch (e.type)
-					{
-					case SDL_MOUSEMOTION:
-						mCurrentSprite = BUTTON_SPRITE_MOUSE_OVER_MOTION;
-						break;
-
-					case SDL_MOUSEBUTTONDOWN:
-						mCurrentSprite = BUTTON_SPRITE_MOUSE_DOWN;
-						break;
-
-					case SDL_MOUSEBUTTONUP:
-						mCurrentSprite = BUTTON_SPRITE_MOUSE_UP;
-						break;
-					}
-				}*/
-
 				gw.update();
 			}
 
