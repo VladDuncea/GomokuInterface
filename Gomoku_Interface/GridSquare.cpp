@@ -31,6 +31,11 @@ void GridSquare::setSprite(int n)
 		privCurrentSprite = n;
 }
 
+int GridSquare::getSprite()
+{
+	return privCurrentSprite;
+}
+
 void GridSquare::locked(bool newState)
 {
 	privLocked = newState;

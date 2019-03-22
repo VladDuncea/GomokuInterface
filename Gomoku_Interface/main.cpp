@@ -8,12 +8,12 @@
 #define GRID_HEIGHT  19
 #define TOTAL_BUTTONS GRID_HEIGHT*GRID_WIDTH
 
-enum ButtonSprite
+enum SquareSprite
 {
-	GRID_DEFAULT = 0,
-	GRID_BLUE_PIECE= 1,
-	GRID_RED_PIECE = 2,
-	BUTTON_SPRITE_TOTAL = 3
+	SQUARE_DEFAULT = 0,
+	SQUARE_BLUE_PIECE= 1,
+	SQUARE_RED_PIECE = 2,
+	SQUARE_SPRITE_TOTAL = 3
 };
 
 enum Players
@@ -22,6 +22,69 @@ enum Players
 	PLAYER_RED = 1,
 	PLAYER_TOTAL = 2
 };
+
+
+bool checkForWin(int x, int y, std::vector<GridSquare> &gs,int squareId)
+{
+	//Check if there are 5 or more pieces togheter
+	int piecesCount = 1;
+	int cx = x, cy = y;
+
+	//Check up-down
+	while (--cy >= 0 && gs[cy*GRID_WIDTH + cx].getSprite() == squareId)
+		piecesCount++;
+	cy = y;
+	while (++cy <GRID_HEIGHT && gs[cy*GRID_WIDTH + cx].getSprite() == squareId)
+		piecesCount++;
+	cy = y;
+	if (piecesCount >= 5)
+		return true;
+
+	//Check left-right
+	piecesCount = 1;
+	while (--cx >= 0 && gs[cy*GRID_WIDTH + cx].getSprite() == squareId)
+		piecesCount++;
+	cx = x;
+	while (++cx < GRID_WIDTH && gs[cy*GRID_WIDTH + cx].getSprite() == squareId)
+		piecesCount++;
+	cx = x;
+	if (piecesCount >= 5)
+		return true;
+
+	//Check left to right diagonally
+	piecesCount = 1;
+	while (--cx >= 0 && --cy >=0 && gs[cy*GRID_WIDTH + cx].getSprite() == squareId)
+		piecesCount++;
+	cx = x; cy = y;
+	while (++cx < GRID_WIDTH && ++cy < GRID_HEIGHT && gs[cy*GRID_WIDTH + cx].getSprite() == squareId)
+		piecesCount++;
+	cx = x; cy = y; 
+	if (piecesCount >= 5)
+		return true;
+
+	//Check right to left diagonally
+	piecesCount = 1;
+	while (	++cx >= 0 && --cy >= 0 && gs[cy*GRID_WIDTH + cx].getSprite() == squareId)
+		piecesCount++;
+	cx = x; cy = y;
+	while ( --cx < GRID_WIDTH && ++cy < GRID_HEIGHT && gs[cy*GRID_WIDTH + cx].getSprite() == squareId)
+		piecesCount++;
+	cx = x; cy = y;
+	if (piecesCount >= 5)
+		return true;
+
+	return false;
+}
+
+void resetSquares(std::vector<GridSquare> &gs)
+{
+	for (auto &square : gs)
+	{
+		square.locked(false);
+		square.setSprite(0);
+	}
+
+}
 
 
 int main(int argc, char* args[])
@@ -34,23 +97,23 @@ int main(int argc, char* args[])
 
 	//Button sprites
 	
-	Texture ButtonSpriteSheet(gw);
+	Texture SquareSpriteSheet(gw);
 	try
 	{
-		ButtonSpriteSheet.loadFromFile("piece.png");
+		SquareSpriteSheet.loadFromFile("piece.png");
 	}
 	catch (int e)
 	{
-		printf("Failed to load button sprite texture!\n");
+		printf("Failed to load square sprite texture!\n");
 		exit(-1);
 	}
 	//Mouse button sprites
-	SDL_Rect spriteClips[BUTTON_SPRITE_TOTAL];
+	SDL_Rect spriteClips[SQUARE_SPRITE_TOTAL];
 	
 	
 
 	//Select sprites in sprite sheet
-	for (int i = 0; i < BUTTON_SPRITE_TOTAL; ++i)
+	for (int i = 0; i < SQUARE_SPRITE_TOTAL; ++i)
 	{
 		spriteClips[i].x = 0;
 		spriteClips[i].y = i * 50;
@@ -60,8 +123,8 @@ int main(int argc, char* args[])
 
 	//All the squares in the grid
 	std::vector<GridSquare> gridSquares;
-	//Set buttons in corners
-	GridSquare gs(gw, gw.height() / GRID_HEIGHT, gw.width() / GRID_WIDTH, BUTTON_SPRITE_TOTAL, ButtonSpriteSheet,spriteClips);
+	//Set the squares to coresponding positions to create the grid
+	GridSquare gs(gw, gw.height() / GRID_HEIGHT, gw.width() / GRID_WIDTH, SQUARE_SPRITE_TOTAL, SquareSpriteSheet,spriteClips);
 	for (int i = 0; i < GRID_HEIGHT; i++)
 	{
 		for (int j = 0; j < GRID_WIDTH; j++)
@@ -96,54 +159,87 @@ int main(int argc, char* args[])
 				quit = true;
 			}
 
+			//Check for key-presses
+			if (e.type == SDL_KEYDOWN)
+			{
+				switch (e.key.keysym.sym)
+				{
+				case SDLK_r:
+					win = false;
+					resetSquares(gridSquares);
+					break;
+
+				case SDLK_ESCAPE:
+					quit = true; 
+					break;
+
+				default:
+					break;
+				}
+			}
+			//Clear window
+			gw.clear();
+
 			//If mouse event happened and the game is not over
 			if (!win & (e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN))
 			{
-				gw.clear();
+				
 				//Get mouse position
 				int x, y;
 				//Get mouse
 				SDL_GetMouseState(&x, &y);
 				
 				printf("x: %d y:%d\n", x, y);
-				//Get button coordinates
+				//Get square coordinates
 				x /= gridSquares[0].width();
 				y /= gridSquares[0].height();
-				int buttonNr = y * GRID_WIDTH + x;
+				int squareNr = y * GRID_WIDTH + x;
+
 				//Set all grid squares to empty
 				for (int i = 0; i < GRID_HEIGHT*GRID_WIDTH; i++)
 				{
-					gridSquares[i].setSprite(GRID_DEFAULT);
+					gridSquares[i].setSprite(SQUARE_DEFAULT);
 				}
+
 				//Account for possible out of bounds
-				if (buttonNr <= 360)
+				if (squareNr <= 360)
 				{
+					//Show the color of the current player
 					if (playerTurn == PLAYER_BLUE)
-						gridSquares[buttonNr].setSprite(GRID_BLUE_PIECE);
+						gridSquares[squareNr].setSprite(SQUARE_BLUE_PIECE);
 					else
-						gridSquares[buttonNr].setSprite(GRID_RED_PIECE);
+						gridSquares[squareNr].setSprite(SQUARE_RED_PIECE);
 					if (e.type == SDL_MOUSEBUTTONDOWN)
 					{
-						if (!gridSquares[buttonNr].locked())
+						//Verify if the square is empty
+						if (!gridSquares[squareNr].locked())
 						{
-							gridSquares[buttonNr].locked(true);
-							playerTurn = playerTurn == PLAYER_RED ? PLAYER_BLUE : PLAYER_RED;
+							//Lock the square
+							gridSquares[squareNr].locked(true);
+							//Check if the player has won
+							win = checkForWin(x, y, gridSquares, playerTurn + 1);
+
+							if (win)
+								std::cout << "Player won";
+							//If the current player did not win change players
+							if (!win)
+								playerTurn = playerTurn == PLAYER_RED ? PLAYER_BLUE : PLAYER_RED;
 						}
 					}
-					
 				}
-					
-
-				//Render the grid
-				for (int i = 0; i < GRID_HEIGHT*GRID_WIDTH; i++)
-				{
-					gridSquares[i].render(gw.width()/GRID_WIDTH,gw.height()/GRID_HEIGHT);
-				}
-				gw.update();
 			}
+
+			//Render the grid
+			for (int i = 0; i < GRID_HEIGHT*GRID_WIDTH; i++)
+			{
+				gridSquares[i].render(gw.width() / GRID_WIDTH, gw.height() / GRID_HEIGHT);
+			}
+
+			//Render window
+			gw.update();
 
 		}
 	}
-	
+
 	return 0;
 }

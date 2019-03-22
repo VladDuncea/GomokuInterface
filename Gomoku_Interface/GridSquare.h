@@ -45,6 +45,8 @@ public:
 
 	//Modify shown sprite
 	void setSprite(int n);
+	//Get shown sprite id
+	int getSprite();
 
 	//Setter and getter for locked state
 	void locked(bool newState);

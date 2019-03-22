@@ -20,7 +20,7 @@ GameWindow::GameWindow(int screen_width,int screen_height): SCREEN_HEIGHT(screen
 		}
 
 		//Create window
-		privWindow = SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screen_width, screen_height, SDL_WINDOW_SHOWN);
+		privWindow = SDL_CreateWindow("GomokuInterface", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screen_width, screen_height, SDL_WINDOW_SHOWN);
 		if (privWindow == NULL)
 		{
 			printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
