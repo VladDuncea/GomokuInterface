@@ -3,7 +3,7 @@
 Texture::Texture(GameWindow &gw) : gameWindow(gw)
 {
 	//Initialize
-	mTexture = NULL;
+	privTexture = NULL;
 	privWidth = 0;
 	privHeight = 0;
 
@@ -56,18 +56,17 @@ bool Texture::loadFromFile(std::string path)
 	}
 
 	//Return success
-	mTexture = newTexture;
-	return mTexture != NULL;
+	privTexture = newTexture;
+	return privTexture != NULL;
 }
 
-#ifdef _SDL_TTF_H
-bool Texture::loadFromRenderedText(std::string textureText, SDL_Color textColor)
+bool Texture::loadFromRenderedText(std::string textureText, TTF_Font *font, SDL_Color textColor)
 {
 	//Get rid of preexisting texture
 	free();
 
 	//Render text surface
-	SDL_Surface* textSurface = TTF_RenderText_Solid(gFont, textureText.c_str(), textColor);
+	SDL_Surface* textSurface = TTF_RenderText_Solid(font, textureText.c_str(), textColor);
 	if (textSurface == NULL)
 	{
 		printf("Unable to render text surface! SDL_ttf Error: %s\n", TTF_GetError());
@@ -75,16 +74,16 @@ bool Texture::loadFromRenderedText(std::string textureText, SDL_Color textColor)
 	else
 	{
 		//Create texture from surface pixels
-		mTexture = SDL_CreateTextureFromSurface(gRenderer, textSurface);
-		if (mTexture == NULL)
+		privTexture = SDL_CreateTextureFromSurface(gameWindow.renderer(), textSurface);
+		if (privTexture == NULL)
 		{
 			printf("Unable to create texture from rendered text! SDL Error: %s\n", SDL_GetError());
 		}
 		else
 		{
 			//Get image dimensions
-			mWidth = textSurface->w;
-			mHeight = textSurface->h;
+			privWidth = textSurface->w;
+			privHeight = textSurface->h;
 		}
 
 		//Get rid of old surface
@@ -92,17 +91,16 @@ bool Texture::loadFromRenderedText(std::string textureText, SDL_Color textColor)
 	}
 
 	//Return success
-	return mTexture != NULL;
+	return privTexture != NULL;
 }
-#endif
 
 void Texture::free()
 {
 	//Free texture if it exists
-	if (mTexture != NULL)
+	if (privTexture != NULL)
 	{
-		SDL_DestroyTexture(mTexture);
-		mTexture = NULL;
+		SDL_DestroyTexture(privTexture);
+		privTexture = NULL;
 		privWidth = 0;
 		privHeight = 0;
 	}
@@ -111,19 +109,19 @@ void Texture::free()
 void Texture::setColor(Uint8 red, Uint8 green, Uint8 blue)
 {
 	//Modulate texture rgb
-	SDL_SetTextureColorMod(mTexture, red, green, blue);
+	SDL_SetTextureColorMod(privTexture, red, green, blue);
 }
 
 void Texture::setBlendMode(SDL_BlendMode blending)
 {
 	//Set blending function
-	SDL_SetTextureBlendMode(mTexture, blending);
+	SDL_SetTextureBlendMode(privTexture, blending);
 }
 
 void Texture::setAlpha(Uint8 alpha)
 {
 	//Modulate texture alpha
-	SDL_SetTextureAlphaMod(mTexture, alpha);
+	SDL_SetTextureAlphaMod(privTexture, alpha);
 }
 
 void Texture::render(int x, int y, SDL_Rect* clip,int width,int height)
@@ -139,7 +137,12 @@ void Texture::render(int x, int y, SDL_Rect* clip,int width,int height)
 	}
 
 	//Render to screen
-	SDL_RenderCopyEx(gameWindow.renderer(), mTexture, clip, &renderQuad, 0.0, NULL, SDL_FLIP_NONE);
+	SDL_RenderCopyEx(gameWindow.renderer(), privTexture, clip, &renderQuad, 0.0, NULL, SDL_FLIP_NONE);
+}
+
+void Texture::renderCentered(int x, int y)
+{
+	render(x - privWidth / 2, y - privHeight / 2);
 }
 
 int Texture::getWidth()

@@ -10,7 +10,7 @@ class Texture
 
 private:
 	//The actual hardware texture
-	SDL_Texture* mTexture;
+	SDL_Texture* privTexture;
 
 	//Image dimensions
 	int privWidth;
@@ -28,10 +28,8 @@ public:
 	//Loads image at specified path
 	bool loadFromFile(std::string path);
 
-#ifdef _SDL_TTF_H
 	//Creates image from font string
-	bool loadFromRenderedText(std::string textureText, SDL_Color textColor);
-#endif
+	bool loadFromRenderedText(std::string textureText, TTF_Font *gFont, SDL_Color textColor = { 0,0,0 });
 
 	//Deallocates texture
 	void free();
@@ -47,6 +45,8 @@ public:
 
 	//Renders texture at given point
 	void render(int x, int y, SDL_Rect* clip = NULL,int width=0,int height=0);
+
+	void renderCentered(int x, int y);
 
 	//Gets image dimensions
 	int getWidth();

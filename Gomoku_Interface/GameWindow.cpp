@@ -47,6 +47,12 @@ GameWindow::GameWindow(int screen_width,int screen_height): SCREEN_HEIGHT(screen
 					printf("SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError());
 					success = false;
 				}
+				//Initialize SDL_ttf
+				if (TTF_Init() == -1)
+				{
+					printf("SDL_ttf could not initialize! SDL_ttf Error: %s\n", TTF_GetError());
+					success = false;
+				}
 			}
 		}
 	}
@@ -93,6 +99,11 @@ void GameWindow::update()
 SDL_Renderer * GameWindow::renderer() const
 {
 	return privRenderer;
+}
+
+void GameWindow::setViewport(SDL_Rect & viewport)
+{
+	SDL_RenderSetViewport(privRenderer, &viewport);
 }
 
 SDL_Window * GameWindow::window() const

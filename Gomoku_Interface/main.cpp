@@ -4,6 +4,7 @@
 #include "GridSquare.h"
 #include "Viewport.h"
 #include <vector>
+#include <string>
 
 #define GRID_WIDTH  19
 #define GRID_HEIGHT  19
@@ -93,38 +94,63 @@ int main(int argc, char* args[])
 {
 	
 	//Start up SDL and create game window
-	GameWindow gw(GRID_WIDTH*30 + MENU_WIDTH, GRID_HEIGHT*30);
+	GameWindow gw(GRID_WIDTH*35 + MENU_WIDTH, GRID_HEIGHT*35);
 
 	//Create the 2 viewports (game grid + menu)
-	Viewport gameViewport(gw, 0, 0, GRID_WIDTH * 30, gw.height());
-	Viewport menuViewport(gw, GRID_WIDTH*30, 0, MENU_WIDTH , gw.height());
+	Viewport gameViewport(gw, 0, 0, GRID_WIDTH * 35, gw.height());
+	Viewport menuViewport(gw, GRID_WIDTH*35, 0, MENU_WIDTH , gw.height());
 	
-
 	//Load assets
+		//Square sprites
+		Texture SquareSpriteSheet(gw);
+		try
+		{
+			SquareSpriteSheet.loadFromFile("piece.png");
+		}
+		catch (int e)
+		{
+			printf("Failed to load square sprite texture!\n");
+			exit(-1);
+		}
 
-	//Square sprites
-	Texture SquareSpriteSheet(gw);
-	try
-	{
-		SquareSpriteSheet.loadFromFile("piece.png");
-	}
-	catch (int e)
-	{
-		printf("Failed to load square sprite texture!\n");
-		exit(-1);
-	}
-
-	//The clips from the sprite sheet
-	SDL_Rect spriteClips[SQUARE_SPRITE_TOTAL];
+		//The clips from the sprite sheet
+		SDL_Rect spriteClips[SQUARE_SPRITE_TOTAL];
 	
-	//Select sprites in sprite sheet
-	for (int i = 0; i < SQUARE_SPRITE_TOTAL; ++i)
-	{
-		spriteClips[i].x = 0;
-		spriteClips[i].y = i * 50;
-		spriteClips[i].w = 50;
-		spriteClips[i].h = 50;
-	}
+		//Select sprites in sprite sheet
+		for (int i = 0; i < SQUARE_SPRITE_TOTAL; ++i)
+		{
+			spriteClips[i].x = 0;
+			spriteClips[i].y = i * 50;
+			spriteClips[i].w = 50;
+			spriteClips[i].h = 50;
+		}
+
+		//Load font
+		TTF_Font *fontBig = NULL;
+		TTF_Font *fontNormal = NULL;
+		fontBig = TTF_OpenFont("font1.ttf", 40);
+		fontNormal = TTF_OpenFont("font1.ttf", 28);
+		if (fontBig == NULL || fontNormal == NULL)
+		{
+			printf("Failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError());
+			exit(-1);
+		}
+		//Create title
+		Texture textTitle(gw);
+		if (!textTitle.loadFromRenderedText("GomokuInterface",fontBig))
+		{
+			printf("Failed to render text texture!\n");
+		}
+		Texture textPlayerRed(gw);
+		Texture textPlayerBlue(gw);
+		Texture textPlayerRedScore(gw);
+		Texture textPlayerBlueScore(gw);
+		Texture textWinMessage(gw);
+		textPlayerBlue.loadFromRenderedText("BLUE Player", fontNormal, { 30,144,255 });
+		textPlayerRed.loadFromRenderedText("RED Player", fontNormal, { 161, 0, 0 });
+		textPlayerBlueScore.loadFromRenderedText("0", fontNormal);
+		textPlayerRedScore.loadFromRenderedText("0", fontNormal);
+		textWinMessage.loadFromRenderedText("", fontNormal);
 
 	//All the squares in the grid
 	std::vector<GridSquare> gridSquares;
@@ -150,6 +176,9 @@ int main(int argc, char* args[])
 
 	//Set player turn to a random number between 0 and 1
 	Players playerTurn = PLAYER_BLUE;
+
+	int playerBlueScore = 0;
+	int playerRedScore = 0;
 
 	//While application is running
 	while (!quit)
@@ -231,21 +260,54 @@ int main(int argc, char* args[])
 								win = checkForWin(x, y, gridSquares, playerTurn + 1);
 
 								if (win)
+								{
 									std::cout << "Player won";
-								//If the current player did not win change players
-								if (!win)
+									if (playerTurn == PLAYER_BLUE)
+									{
+										playerBlueScore++;
+										textPlayerBlueScore.loadFromRenderedText(std::to_string(playerBlueScore), fontNormal);
+									}
+									else
+									{
+										playerRedScore++;
+										textPlayerRedScore.loadFromRenderedText(std::to_string(playerRedScore), fontNormal);
+									}
+								}
+								else
+								{
+									//If the current player did not win change players
 									playerTurn = playerTurn == PLAYER_RED ? PLAYER_BLUE : PLAYER_RED;
+								}
+									
 							}
 						}
 					}
 				}
+
+				//Inside menu area
+				else
+				{
+
+				}
 			}
 
 			//Render the grid
+			gw.setViewport(gameViewport.viewportRect());
 			for (int i = 0; i < GRID_HEIGHT*GRID_WIDTH; i++)
 			{
 				gridSquares[i].render(gameViewport.width() / GRID_WIDTH, gameViewport.height() / GRID_HEIGHT);
 			}
+
+			//Render the menu
+			gw.setViewport(menuViewport.viewportRect());
+			textTitle.render(menuViewport.width()/2 -textTitle.getWidth()/2, menuViewport.height() / 10);
+			int middleOfViewport = menuViewport.height() / 2;
+			int blueX = menuViewport.width() / 10 + textPlayerBlue.getWidth() / 2;
+			int redX = menuViewport.width() - textPlayerRed.getWidth()/2 - menuViewport.width() / 10;
+			textPlayerBlue.renderCentered(blueX, middleOfViewport);
+			textPlayerRed.renderCentered(redX, middleOfViewport);
+			textPlayerBlueScore.renderCentered(blueX, middleOfViewport + menuViewport.height() / 10);
+			textPlayerRedScore.renderCentered(redX, middleOfViewport + menuViewport.height() / 10);
 
 			//Render window
 			gw.update();

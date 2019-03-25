@@ -26,3 +26,8 @@ int Viewport::width() const
 {
 	return privRect.w;
 }
+
+SDL_Rect& Viewport::viewportRect()
+{
+	return privRect;
+}

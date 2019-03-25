@@ -1,6 +1,7 @@
 #pragma once
 #include <SDL.h>
 #include <SDL_image.h>
+#include <SDL_ttf.h>
 #include <stdio.h>
 #include <string>
 #include <exception>
@@ -28,6 +29,7 @@ public:
 	void clear();
 	void update();
 	SDL_Renderer * renderer() const;
+	void setViewport(SDL_Rect &viewport);
 	SDL_Window * window() const;
 };
 
