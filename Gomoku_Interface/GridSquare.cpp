@@ -1,7 +1,7 @@
 #include "GridSquare.h"
 #include "Texture.h"
 
-GridSquare::GridSquare(GameWindow &gw, const int buttonHeight, const int buttonWidth, const int nrStates, Texture &spriteSheet, SDL_Rect *spriteClips) : game_window(gw), BUTTON_HEIGHT(buttonHeight), BUTTON_WIDTH(buttonWidth), TOTAL_STATES(nrStates), gridsprite(spriteSheet), spriteClips(spriteClips)
+GridSquare::GridSquare(Viewport &viewp, const int buttonHeight, const int buttonWidth, const int nrStates, Texture &spriteSheet, SDL_Rect *spriteClips) : gameViewport(viewp), BUTTON_HEIGHT(buttonHeight), BUTTON_WIDTH(buttonWidth), TOTAL_STATES(nrStates), gridsprite(spriteSheet), spriteClips(spriteClips)
 {
 	privLocked = false;
 	privPosition.x = 0;

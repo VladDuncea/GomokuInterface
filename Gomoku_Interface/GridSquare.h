@@ -3,7 +3,7 @@
 #include <SDL_image.h>
 #include <stdio.h>
 #include <string>
-#include "GameWindow.h"
+#include "Viewport.h"
 #include "Texture.h"
 
 //The mouse button
@@ -25,7 +25,7 @@ class GridSquare
 	int privCurrentSprite;
 
 	//Reference to game window
-	GameWindow &game_window;
+	Viewport &gameViewport;
 
 	//Reference to sprite texture
 	Texture & gridsprite;
@@ -35,7 +35,7 @@ class GridSquare
 
 public:
 	//Initializes internal variables
-	GridSquare(GameWindow& gw,const int buttonHeight,const int buttonWidth,const int nrStates,Texture &spriteSheet, SDL_Rect *spriteClips);
+	GridSquare(Viewport& viewp,const int buttonHeight,const int buttonWidth,const int nrStates,Texture &spriteSheet, SDL_Rect *spriteClips);
 
 	//Sets top left position
 	void setPosition(int x, int y);

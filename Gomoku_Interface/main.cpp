@@ -2,10 +2,12 @@
 #include "GameWindow.h"
 #include "Texture.h"
 #include "GridSquare.h"
+#include "Viewport.h"
 #include <vector>
 
 #define GRID_WIDTH  19
 #define GRID_HEIGHT  19
+#define MENU_WIDTH  300
 #define TOTAL_BUTTONS GRID_HEIGHT*GRID_WIDTH
 
 enum SquareSprite
@@ -91,12 +93,16 @@ int main(int argc, char* args[])
 {
 	
 	//Start up SDL and create game window
-	GameWindow gw(GRID_HEIGHT*30, GRID_WIDTH*30);
+	GameWindow gw(GRID_WIDTH*30 + MENU_WIDTH, GRID_HEIGHT*30);
+
+	//Create the 2 viewports (game grid + menu)
+	Viewport gameViewport(gw, 0, 0, GRID_WIDTH * 30, gw.height());
+	Viewport menuViewport(gw, GRID_WIDTH*30, 0, MENU_WIDTH , gw.height());
 	
+
 	//Load assets
 
-	//Button sprites
-	
+	//Square sprites
 	Texture SquareSpriteSheet(gw);
 	try
 	{
@@ -107,11 +113,10 @@ int main(int argc, char* args[])
 		printf("Failed to load square sprite texture!\n");
 		exit(-1);
 	}
-	//Mouse button sprites
+
+	//The clips from the sprite sheet
 	SDL_Rect spriteClips[SQUARE_SPRITE_TOTAL];
 	
-	
-
 	//Select sprites in sprite sheet
 	for (int i = 0; i < SQUARE_SPRITE_TOTAL; ++i)
 	{
@@ -124,7 +129,7 @@ int main(int argc, char* args[])
 	//All the squares in the grid
 	std::vector<GridSquare> gridSquares;
 	//Set the squares to coresponding positions to create the grid
-	GridSquare gs(gw, gw.height() / GRID_HEIGHT, gw.width() / GRID_WIDTH, SQUARE_SPRITE_TOTAL, SquareSpriteSheet,spriteClips);
+	GridSquare gs(gameViewport, gameViewport.height() / GRID_HEIGHT, gameViewport.width() / GRID_WIDTH, SQUARE_SPRITE_TOTAL, SquareSpriteSheet,spriteClips);
 	for (int i = 0; i < GRID_HEIGHT; i++)
 	{
 		for (int j = 0; j < GRID_WIDTH; j++)
@@ -190,40 +195,47 @@ int main(int argc, char* args[])
 				SDL_GetMouseState(&x, &y);
 				
 				printf("x: %d y:%d\n", x, y);
-				//Get square coordinates
-				x /= gridSquares[0].width();
-				y /= gridSquares[0].height();
-				int squareNr = y * GRID_WIDTH + x;
 
-				//Set all grid squares to empty
+				//Set all unlocked grid squares to empty
 				for (int i = 0; i < GRID_HEIGHT*GRID_WIDTH; i++)
 				{
 					gridSquares[i].setSprite(SQUARE_DEFAULT);
 				}
 
-				//Account for possible out of bounds
-				if (squareNr <= 360)
+				//Inside play area
+				if (x < gameViewport.width())
 				{
-					//Show the color of the current player
-					if (playerTurn == PLAYER_BLUE)
-						gridSquares[squareNr].setSprite(SQUARE_BLUE_PIECE);
-					else
-						gridSquares[squareNr].setSprite(SQUARE_RED_PIECE);
-					if (e.type == SDL_MOUSEBUTTONDOWN)
-					{
-						//Verify if the square is empty
-						if (!gridSquares[squareNr].locked())
-						{
-							//Lock the square
-							gridSquares[squareNr].locked(true);
-							//Check if the player has won
-							win = checkForWin(x, y, gridSquares, playerTurn + 1);
+					//Get square coordinates
+					x /= gridSquares[0].width();
+					y /= gridSquares[0].height();
+					int squareNr = y * GRID_WIDTH + x;
 
-							if (win)
-								std::cout << "Player won";
-							//If the current player did not win change players
-							if (!win)
-								playerTurn = playerTurn == PLAYER_RED ? PLAYER_BLUE : PLAYER_RED;
+					
+
+					//Account for possible out of bounds
+					if (squareNr <= 360)
+					{
+						//Show the color of the current player
+						if (playerTurn == PLAYER_BLUE)
+							gridSquares[squareNr].setSprite(SQUARE_BLUE_PIECE);
+						else
+							gridSquares[squareNr].setSprite(SQUARE_RED_PIECE);
+						if (e.type == SDL_MOUSEBUTTONDOWN)
+						{
+							//Verify if the square is empty
+							if (!gridSquares[squareNr].locked())
+							{
+								//Lock the square
+								gridSquares[squareNr].locked(true);
+								//Check if the player has won
+								win = checkForWin(x, y, gridSquares, playerTurn + 1);
+
+								if (win)
+									std::cout << "Player won";
+								//If the current player did not win change players
+								if (!win)
+									playerTurn = playerTurn == PLAYER_RED ? PLAYER_BLUE : PLAYER_RED;
+							}
 						}
 					}
 				}
@@ -232,7 +244,7 @@ int main(int argc, char* args[])
 			//Render the grid
 			for (int i = 0; i < GRID_HEIGHT*GRID_WIDTH; i++)
 			{
-				gridSquares[i].render(gw.width() / GRID_WIDTH, gw.height() / GRID_HEIGHT);
+				gridSquares[i].render(gameViewport.width() / GRID_WIDTH, gameViewport.height() / GRID_HEIGHT);
 			}
 
 			//Render window
