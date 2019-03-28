@@ -8,6 +8,8 @@
 
 #define GRID_WIDTH  19
 #define GRID_HEIGHT  19
+#define SQUARE_WIDTH  35
+#define SQUARE_HEIGHT  35
 #define MENU_WIDTH  300
 #define TOTAL_BUTTONS GRID_HEIGHT*GRID_WIDTH
 
@@ -94,18 +96,18 @@ int main(int argc, char* args[])
 {
 	
 	//Start up SDL and create game window
-	GameWindow gw(GRID_WIDTH*35 + MENU_WIDTH, GRID_HEIGHT*35);
+	GameWindow gw(GRID_WIDTH*SQUARE_WIDTH + MENU_WIDTH, GRID_HEIGHT*SQUARE_HEIGHT);
 
 	//Create the 2 viewports (game grid + menu)
 	Viewport gameViewport(gw, 0, 0, GRID_WIDTH * 35, gw.height());
-	Viewport menuViewport(gw, GRID_WIDTH*35, 0, MENU_WIDTH , gw.height());
+	Viewport menuViewport(gw, GRID_WIDTH*SQUARE_WIDTH, 0, MENU_WIDTH , gw.height());
 	
 	//Load assets
 		//Square sprites
 		Texture SquareSpriteSheet(gw);
 		try
 		{
-			SquareSpriteSheet.loadFromFile("piece.png");
+			SquareSpriteSheet.loadFromFile("piece2.png");
 		}
 		catch (int e)
 		{
