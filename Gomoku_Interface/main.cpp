@@ -5,26 +5,28 @@
 #include "Viewport.h"
 #include <vector>
 #include <string>
+#include <windows.h>
 
 #define GRID_WIDTH  19
 #define GRID_HEIGHT  19
-#define SQUARE_WIDTH  35
-#define SQUARE_HEIGHT  35
-#define MENU_WIDTH  300
+#define SQUARE_WIDTH  70
+#define SQUARE_HEIGHT  70
+#define MENU_WIDTH  SQUARE_WIDTH*10
 #define TOTAL_BUTTONS GRID_HEIGHT*GRID_WIDTH
+#define FONT "timesbd.ttf"
 
 enum SquareSprite
 {
 	SQUARE_DEFAULT = 0,
-	SQUARE_BLUE_PIECE= 1,
-	SQUARE_RED_PIECE = 2,
+	SQUARE_BLACK_PIECE= 1,
+	SQUARE_WHITE_PIECE = 2,
 	SQUARE_SPRITE_TOTAL = 3
 };
 
 enum Players
 {
-	PLAYER_BLUE = 0,
-	PLAYER_RED = 1,
+	PLAYER_BLACK = 0,
+	PLAYER_WHITE = 1,
 	PLAYER_TOTAL = 2
 };
 
@@ -94,20 +96,21 @@ void resetSquares(std::vector<GridSquare> &gs)
 
 int main(int argc, char* args[])
 {
-	
+
 	//Start up SDL and create game window
 	GameWindow gw(GRID_WIDTH*SQUARE_WIDTH + MENU_WIDTH, GRID_HEIGHT*SQUARE_HEIGHT);
 
 	//Create the 2 viewports (game grid + menu)
-	Viewport gameViewport(gw, 0, 0, GRID_WIDTH * 35, gw.height());
-	Viewport menuViewport(gw, GRID_WIDTH*SQUARE_WIDTH, 0, MENU_WIDTH , gw.height());
-	
+	Viewport gameViewport(gw, 0, 0, GRID_WIDTH * SQUARE_WIDTH, gw.height());
+	Viewport menuViewport(gw, GRID_WIDTH*SQUARE_WIDTH, 0, MENU_WIDTH, gw.height());
+
 	//Load assets
+
 		//Square sprites
 		Texture SquareSpriteSheet(gw);
 		try
 		{
-			SquareSpriteSheet.loadFromFile("piece2.png");
+			SquareSpriteSheet.loadFromFile("pieces3.png");
 		}
 		catch (int e)
 		{
@@ -122,37 +125,41 @@ int main(int argc, char* args[])
 		for (int i = 0; i < SQUARE_SPRITE_TOTAL; ++i)
 		{
 			spriteClips[i].x = 0;
-			spriteClips[i].y = i * 50;
-			spriteClips[i].w = 50;
-			spriteClips[i].h = 50;
+			spriteClips[i].y = i * 400;
+			spriteClips[i].w = 400;
+			spriteClips[i].h = 400;
 		}
 
 		//Load font
+		TTF_Font *fontLarge = NULL;
 		TTF_Font *fontBig = NULL;
 		TTF_Font *fontNormal = NULL;
-		fontBig = TTF_OpenFont("font1.ttf", 40);
-		fontNormal = TTF_OpenFont("font1.ttf", 28);
+		fontLarge = TTF_OpenFont(FONT, 40 +MENU_WIDTH/20);
+		fontBig = TTF_OpenFont(FONT, 28 + MENU_WIDTH / 40);
+		fontNormal = TTF_OpenFont(FONT, 20 + MENU_WIDTH / 40);
 		if (fontBig == NULL || fontNormal == NULL)
 		{
-			printf("Failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError());
+			printf("Failed to load font! SDL_ttf Error: %s\n", TTF_GetError());
 			exit(-1);
 		}
 		//Create title
 		Texture textTitle(gw);
-		if (!textTitle.loadFromRenderedText("GomokuInterface",fontBig))
+		if (!textTitle.loadFromRenderedText("GomokuInterface",fontLarge))
 		{
 			printf("Failed to render text texture!\n");
 		}
 		Texture textPlayerRed(gw);
-		Texture textPlayerBlue(gw);
+		Texture textPlayerBlack(gw);
 		Texture textPlayerRedScore(gw);
-		Texture textPlayerBlueScore(gw);
+		Texture textPlayerBlackScore(gw);
 		Texture textWinMessage(gw);
-		textPlayerBlue.loadFromRenderedText("BLUE Player", fontNormal, { 30,144,255 });
-		textPlayerRed.loadFromRenderedText("RED Player", fontNormal, { 161, 0, 0 });
-		textPlayerBlueScore.loadFromRenderedText("0", fontNormal);
+		Texture textContinueMessage(gw);
+		textPlayerBlack.loadFromRenderedText("BLACK Player", fontNormal);
+		textPlayerRed.loadFromRenderedText("WHITE Player", fontNormal);
+		textPlayerBlackScore.loadFromRenderedText("0", fontNormal);
 		textPlayerRedScore.loadFromRenderedText("0", fontNormal);
-		textWinMessage.loadFromRenderedText("", fontNormal);
+		textWinMessage.loadFromRenderedText("", fontBig);
+		textContinueMessage.loadFromRenderedText("Press 'R' to start another game", fontNormal);
 
 	//All the squares in the grid
 	std::vector<GridSquare> gridSquares;
@@ -177,10 +184,10 @@ int main(int argc, char* args[])
 	bool win = false;
 
 	//Set player turn to a random number between 0 and 1
-	Players playerTurn = PLAYER_BLUE;
+	Players playerTurn = PLAYER_BLACK;
 
-	int playerBlueScore = 0;
-	int playerRedScore = 0;
+	int playerBlackScore = 0;
+	int playerWhiteScore = 0;
 
 	//While application is running
 	while (!quit)
@@ -201,8 +208,11 @@ int main(int argc, char* args[])
 				switch (e.key.keysym.sym)
 				{
 				case SDLK_r:
-					win = false;
-					resetSquares(gridSquares);
+					if (win)
+					{
+						win = false;
+						resetSquares(gridSquares);
+					}
 					break;
 
 				case SDLK_ESCAPE:
@@ -219,12 +229,12 @@ int main(int argc, char* args[])
 			//If mouse event happened and the game is not over
 			if (!win & (e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN))
 			{
-				
+
 				//Get mouse position
 				int x, y;
 				//Get mouse
 				SDL_GetMouseState(&x, &y);
-				
+
 				printf("x: %d y:%d\n", x, y);
 
 				//Set all unlocked grid squares to empty
@@ -241,16 +251,16 @@ int main(int argc, char* args[])
 					y /= gridSquares[0].height();
 					int squareNr = y * GRID_WIDTH + x;
 
-					
+
 
 					//Account for possible out of bounds
 					if (squareNr <= 360)
 					{
 						//Show the color of the current player
-						if (playerTurn == PLAYER_BLUE)
-							gridSquares[squareNr].setSprite(SQUARE_BLUE_PIECE);
+						if (playerTurn == PLAYER_BLACK)
+							gridSquares[squareNr].setSprite(SQUARE_BLACK_PIECE);
 						else
-							gridSquares[squareNr].setSprite(SQUARE_RED_PIECE);
+							gridSquares[squareNr].setSprite(SQUARE_WHITE_PIECE);
 						if (e.type == SDL_MOUSEBUTTONDOWN)
 						{
 							//Verify if the square is empty
@@ -264,23 +274,25 @@ int main(int argc, char* args[])
 								if (win)
 								{
 									std::cout << "Player won";
-									if (playerTurn == PLAYER_BLUE)
+									if (playerTurn == PLAYER_BLACK)
 									{
-										playerBlueScore++;
-										textPlayerBlueScore.loadFromRenderedText(std::to_string(playerBlueScore), fontNormal);
+										playerBlackScore++;
+										textPlayerBlackScore.loadFromRenderedText(std::to_string(playerBlackScore), fontNormal);
+										textWinMessage.loadFromRenderedText("Player Black won!", fontNormal);
 									}
 									else
 									{
-										playerRedScore++;
-										textPlayerRedScore.loadFromRenderedText(std::to_string(playerRedScore), fontNormal);
+										playerWhiteScore++;
+										textPlayerRedScore.loadFromRenderedText(std::to_string(playerWhiteScore), fontNormal);
+										textWinMessage.loadFromRenderedText("Player White won!", fontBig);
 									}
 								}
 								else
 								{
 									//If the current player did not win change players
-									playerTurn = playerTurn == PLAYER_RED ? PLAYER_BLUE : PLAYER_RED;
+									playerTurn = playerTurn == PLAYER_WHITE ? PLAYER_BLACK : PLAYER_WHITE;
 								}
-									
+
 							}
 						}
 					}
@@ -304,16 +316,23 @@ int main(int argc, char* args[])
 			gw.setViewport(menuViewport.viewportRect());
 			textTitle.render(menuViewport.width()/2 -textTitle.getWidth()/2, menuViewport.height() / 10);
 			int middleOfViewport = menuViewport.height() / 2;
-			int blueX = menuViewport.width() / 10 + textPlayerBlue.getWidth() / 2;
-			int redX = menuViewport.width() - textPlayerRed.getWidth()/2 - menuViewport.width() / 10;
-			textPlayerBlue.renderCentered(blueX, middleOfViewport);
-			textPlayerRed.renderCentered(redX, middleOfViewport);
-			textPlayerBlueScore.renderCentered(blueX, middleOfViewport + menuViewport.height() / 10);
-			textPlayerRedScore.renderCentered(redX, middleOfViewport + menuViewport.height() / 10);
+			int blackX = menuViewport.width() / 10 + textPlayerBlack.getWidth() / 2;
+			int whiteX = menuViewport.width() - textPlayerRed.getWidth()/2 - menuViewport.width() / 10;
+			textPlayerBlack.renderCentered(blackX, middleOfViewport);
+			textPlayerRed.renderCentered(whiteX, middleOfViewport);
+			textPlayerBlackScore.renderCentered(blackX, middleOfViewport + menuViewport.height() / 10);
+			textPlayerRedScore.renderCentered(whiteX, middleOfViewport + menuViewport.height() / 10);
+
+				//Render win message when players win
+			if (win)
+			{
+				textWinMessage.renderCentered(menuViewport.width() / 2, menuViewport.height() / 3);
+				textContinueMessage.renderCentered(menuViewport.width() / 2, menuViewport.height() / 3 + textWinMessage.getHeight());
+			}
+			
 
 			//Render window
 			gw.update();
-
 		}
 	}
 
