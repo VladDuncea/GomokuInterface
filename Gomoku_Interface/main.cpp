@@ -7,10 +7,10 @@
 #include <string>
 #include <windows.h>
 
-#define GRID_WIDTH  19
-#define GRID_HEIGHT  19
-#define SQUARE_WIDTH  70
-#define SQUARE_HEIGHT  70
+#define GRID_WIDTH  20
+#define GRID_HEIGHT  23
+#define SQUARE_WIDTH  50
+#define SQUARE_HEIGHT  50
 #define MENU_WIDTH  SQUARE_WIDTH*10
 #define TOTAL_BUTTONS GRID_HEIGHT*GRID_WIDTH
 #define FONT "timesbd.ttf"
@@ -25,9 +25,16 @@ enum SquareSprite
 
 enum Players
 {
-	PLAYER_BLACK = 0,
-	PLAYER_WHITE = 1,
+	PLAYER_ONE = 0,
+	PLAYER_TWO = 1,
 	PLAYER_TOTAL = 2
+};
+
+enum StartStrategy
+{
+	STRATEGY_NOT_SET = 0,
+	STRATEGY_SWAP = 1,
+	STRATEGY_SWAP2 = 2
 };
 
 
@@ -134,9 +141,9 @@ int main(int argc, char* args[])
 		TTF_Font *fontLarge = NULL;
 		TTF_Font *fontBig = NULL;
 		TTF_Font *fontNormal = NULL;
-		fontLarge = TTF_OpenFont(FONT, 40 +MENU_WIDTH/20);
-		fontBig = TTF_OpenFont(FONT, 28 + MENU_WIDTH / 40);
-		fontNormal = TTF_OpenFont(FONT, 20 + MENU_WIDTH / 40);
+		fontLarge = TTF_OpenFont(FONT, 36 +MENU_WIDTH/20);
+		fontBig = TTF_OpenFont(FONT, 25 + MENU_WIDTH / 40);
+		fontNormal = TTF_OpenFont(FONT, 16 + MENU_WIDTH / 40);
 		if (fontBig == NULL || fontNormal == NULL)
 		{
 			printf("Failed to load font! SDL_ttf Error: %s\n", TTF_GetError());
@@ -144,7 +151,7 @@ int main(int argc, char* args[])
 		}
 		//Create title
 		Texture textTitle(gw);
-		if (!textTitle.loadFromRenderedText("GomokuInterface",fontLarge))
+		if (!textTitle.loadFromRenderedText("GomokuInterface", fontLarge, { 214, 118, 40 }))
 		{
 			printf("Failed to render text texture!\n");
 		}
@@ -154,12 +161,21 @@ int main(int argc, char* args[])
 		Texture textPlayerBlackScore(gw);
 		Texture textWinMessage(gw);
 		Texture textContinueMessage(gw);
+		Texture textPieceNum(gw);
+		Texture textPlayerTurn(gw);
+		Texture textStrategyChoice(gw);
+		Texture textStartingStrategy(gw);
+		Texture textStartingStrategyOptions(gw);
+
 		textPlayerBlack.loadFromRenderedText("BLACK Player", fontNormal);
 		textPlayerRed.loadFromRenderedText("WHITE Player", fontNormal);
 		textPlayerBlackScore.loadFromRenderedText("0", fontNormal);
 		textPlayerRedScore.loadFromRenderedText("0", fontNormal);
 		textWinMessage.loadFromRenderedText("", fontBig);
 		textContinueMessage.loadFromRenderedText("Press 'R' to start another game", fontNormal);
+		textPieceNum.loadFromRenderedText("Piece : 1", fontNormal);
+		textStartingStrategy.loadFromRenderedText("Please choose a starting strategy !", fontNormal);
+		textStartingStrategyOptions.loadFromRenderedText("1 - SWAP || 2 - SWAP2", fontNormal);
 
 	//All the squares in the grid
 	std::vector<GridSquare> gridSquares;
@@ -173,6 +189,9 @@ int main(int argc, char* args[])
 			gridSquares.push_back(gs);
 		}
 	}
+	//
+	//Game variables
+	//
 
 	//Main loop flag
 	bool quit = false;
@@ -183,11 +202,19 @@ int main(int argc, char* args[])
 	//Set win variable
 	bool win = false;
 
-	//Set player turn to a random number between 0 and 1
-	Players playerTurn = PLAYER_BLACK;
+	//Set player turn
+	//TODO: ask how the first player is chosen
+	Players playerTurn = PLAYER_ONE;
+	textPlayerTurn.loadFromRenderedText("Player's ONE turn", fontNormal);
+
+	int turnNr = 0;
+	bool swap2choice3 = false;
 
 	int playerBlackScore = 0;
 	int playerWhiteScore = 0;
+
+	StartStrategy startStrat = STRATEGY_NOT_SET;
+	bool stratChosen = false;
 
 	//While application is running
 	while (!quit)
@@ -211,10 +238,42 @@ int main(int argc, char* args[])
 					if (win)
 					{
 						win = false;
+						turnNr = 0;
+						swap2choice3 = false;
+						textPieceNum.loadFromRenderedText("Piece : 1", fontNormal);
 						resetSquares(gridSquares);
 					}
 					break;
-
+				case SDLK_1:
+					if (startStrat == STRATEGY_NOT_SET)
+					{
+						startStrat = STRATEGY_SWAP;
+						textStartingStrategy.loadFromRenderedText("Chosen starting rule : SWAP", fontNormal);
+					}
+					else if (turnNr == 3 || (turnNr==5&&startStrat==STRATEGY_SWAP2))
+					{
+						stratChosen = true;
+					}
+					break;
+				case SDLK_2:
+					if (startStrat == STRATEGY_NOT_SET)
+					{
+						startStrat = STRATEGY_SWAP2;
+						textStartingStrategy.loadFromRenderedText("Chosen starting rule : SWAP2", fontNormal);
+					}
+					else if (!stratChosen && turnNr == 3|| (turnNr == 5 && swap2choice3))
+					{
+						playerTurn = playerTurn == PLAYER_ONE ? PLAYER_TWO : PLAYER_ONE;
+						stratChosen = true;
+					}
+					break;
+				case SDLK_3:
+					if (!stratChosen && turnNr == 3 && startStrat ==STRATEGY_SWAP2)
+					{
+						swap2choice3 = true;
+						stratChosen = true;
+					}
+					break;
 				case SDLK_ESCAPE:
 					quit = true; 
 					break;
@@ -226,8 +285,8 @@ int main(int argc, char* args[])
 			//Clear window
 			gw.clear();
 
-			//If mouse event happened and the game is not over
-			if (!win & (e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN))
+			//If mouse event happened and the game is not over and a starting strategy is set
+			if (!win&& startStrat!=STRATEGY_NOT_SET && (e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN))
 			{
 
 				//Get mouse position
@@ -254,10 +313,10 @@ int main(int argc, char* args[])
 
 
 					//Account for possible out of bounds
-					if (squareNr <= 360)
+					if (squareNr <= GRID_HEIGHT*GRID_WIDTH)
 					{
 						//Show the color of the current player
-						if (playerTurn == PLAYER_BLACK)
+						if (turnNr % 2 == 0)
 							gridSquares[squareNr].setSprite(SQUARE_BLACK_PIECE);
 						else
 							gridSquares[squareNr].setSprite(SQUARE_WHITE_PIECE);
@@ -269,12 +328,12 @@ int main(int argc, char* args[])
 								//Lock the square
 								gridSquares[squareNr].locked(true);
 								//Check if the player has won
-								win = checkForWin(x, y, gridSquares, playerTurn + 1);
+								win = checkForWin(x, y, gridSquares, turnNr%2 ==0 ? SQUARE_BLACK_PIECE : SQUARE_WHITE_PIECE);
 
 								if (win)
 								{
 									std::cout << "Player won";
-									if (playerTurn == PLAYER_BLACK)
+									if (turnNr % 2== 0)
 									{
 										playerBlackScore++;
 										textPlayerBlackScore.loadFromRenderedText(std::to_string(playerBlackScore), fontNormal);
@@ -289,8 +348,15 @@ int main(int argc, char* args[])
 								}
 								else
 								{
-									//If the current player did not win change players
-									playerTurn = playerTurn == PLAYER_WHITE ? PLAYER_BLACK : PLAYER_WHITE;
+									//If the current player did not win advance game
+									turnNr++;
+									if (turnNr>2 && (!swap2choice3 || turnNr >4))
+									{
+										playerTurn = playerTurn == PLAYER_ONE ? PLAYER_TWO : PLAYER_ONE;
+									}
+									std::string text ("Piece : ");
+									text+=std::to_string(turnNr+1);
+									textPieceNum.loadFromRenderedText(text, fontNormal);
 								}
 
 							}
@@ -314,12 +380,52 @@ int main(int argc, char* args[])
 
 			//Render the menu
 			gw.setViewport(menuViewport.viewportRect());
-			textTitle.render(menuViewport.width()/2 -textTitle.getWidth()/2, menuViewport.height() / 10);
+				//Game title
+			textTitle.render(menuViewport.width()/2 -textTitle.getWidth()/2, menuViewport.height() / 100);
+				//Starting strategy
+			textStartingStrategy.renderCentered(menuViewport.width() / 2, menuViewport.height() / 50 + textTitle.getHeight());
+			if (startStrat == STRATEGY_NOT_SET)
+			{
+				textStartingStrategyOptions.renderCentered(menuViewport.width() / 2, menuViewport.height() / 25 + textTitle.getHeight() + textTitle.getHeight());
+			}
+				//Piece counter
+			else
+			{
+				textPieceNum.render(menuViewport.width() / 10, menuViewport.height() / 25 + textTitle.getHeight() + textTitle.getHeight());
+			}
+
+				//Usefull variables
 			int middleOfViewport = menuViewport.height() / 2;
 			int blackX = menuViewport.width() / 10 + textPlayerBlack.getWidth() / 2;
 			int whiteX = menuViewport.width() - textPlayerRed.getWidth()/2 - menuViewport.width() / 10;
+				
+				//Swap choices
+			if (!stratChosen && turnNr == 3)
+			{
+				if (startStrat == STRATEGY_SWAP)
+					textStrategyChoice.loadFromRenderedText("Do you want to 1-do nothing || 2-swap ", fontNormal);
+				else
+					textStrategyChoice.loadFromRenderedText("Do you want to 1-do nothing || 2-swap || 3-yes ", fontNormal);
+				textStrategyChoice.renderCentered(menuViewport.width() / 2, middleOfViewport - textPlayerTurn.getHeight() * 4);
+			}
+			else if (!stratChosen && turnNr == 5 && swap2choice3)
+			{
+				textStrategyChoice.loadFromRenderedText("Do you want to 1-do nothing || 2-swap ", fontNormal);
+				textStrategyChoice.renderCentered(menuViewport.width() / 2, middleOfViewport - textPlayerTurn.getHeight() * 4);
+			}
+			else if (turnNr == 4)
+				stratChosen = false;
+
+				//Turn indicator
+			if (playerTurn == PLAYER_ONE)
+				textPlayerTurn.loadFromRenderedText("Player's ONE turn",fontNormal);
+			else
+				textPlayerTurn.loadFromRenderedText("Player's TWO turn", fontNormal);
+			textPlayerTurn.renderCentered(menuViewport.width() / 2, middleOfViewport - textPlayerTurn.getHeight() * 2);
+				//Player black,white text
 			textPlayerBlack.renderCentered(blackX, middleOfViewport);
 			textPlayerRed.renderCentered(whiteX, middleOfViewport);
+				//Player black,white score
 			textPlayerBlackScore.renderCentered(blackX, middleOfViewport + menuViewport.height() / 10);
 			textPlayerRedScore.renderCentered(whiteX, middleOfViewport + menuViewport.height() / 10);
 
