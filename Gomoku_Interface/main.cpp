@@ -6,12 +6,13 @@
 #include <vector>
 #include <string>
 #include <windows.h>
+#include "TextBox.h"
 
 #define GRID_WIDTH  20
 #define GRID_HEIGHT  23
-#define SQUARE_WIDTH  50
-#define SQUARE_HEIGHT  50
-#define MENU_WIDTH  SQUARE_WIDTH*10
+#define SQUARE_WIDTH 30
+#define SQUARE_HEIGHT  SQUARE_WIDTH
+#define MENU_WIDTH  SQUARE_WIDTH*15
 #define TOTAL_BUTTONS GRID_HEIGHT*GRID_WIDTH
 #define FONT "timesbd.ttf"
 
@@ -141,24 +142,31 @@ int main(int argc, char* args[])
 		TTF_Font *fontLarge = NULL;
 		TTF_Font *fontBig = NULL;
 		TTF_Font *fontNormal = NULL;
-		fontLarge = TTF_OpenFont(FONT, 36 +MENU_WIDTH/20);
-		fontBig = TTF_OpenFont(FONT, 25 + MENU_WIDTH / 40);
-		fontNormal = TTF_OpenFont(FONT, 16 + MENU_WIDTH / 40);
+		fontLarge = TTF_OpenFont(FONT, 20 +MENU_WIDTH/20);
+		fontBig = TTF_OpenFont(FONT, 10 + MENU_WIDTH / 40);
+		fontNormal = TTF_OpenFont(FONT, 8 + MENU_WIDTH / 40);
 		if (fontBig == NULL || fontNormal == NULL)
 		{
 			printf("Failed to load font! SDL_ttf Error: %s\n", TTF_GetError());
 			exit(-1);
 		}
+		
+		//Store all the renderable objects
+		std::vector<Renderable *> rendVect;
+
 		//Create title
-		Texture textTitle(gw);
-		if (!textTitle.loadFromRenderedText("GomokuInterface", fontLarge, { 214, 118, 40 }))
+		TextBox textTitlee(gw, "Gomoku Interface", fontLarge,{ 214, 118, 40 }); //TODO error checking
+		textTitlee.setRendCentered(true);
+		textTitlee.setRenderPos(menuViewport.width() / 2, menuViewport.height() / 100 + textTitlee.getHeight() / 2);
+		rendVect.push_back(&textTitlee);
+		/*if (!textTitle.loadFromRenderedText("GomokuInterface", fontLarge, { 214, 118, 40 }))
 		{
 			printf("Failed to render text texture!\n");
-		}
-		Texture textPlayerRed(gw);
-		Texture textPlayerBlack(gw);
-		Texture textPlayerRedScore(gw);
-		Texture textPlayerBlackScore(gw);
+		}*/
+		Texture textPlayerTwo(gw);
+		Texture textPlayerOne(gw);
+		Texture textPlayerTwoScore(gw);
+		Texture textPlayerOneScore(gw);
 		Texture textWinMessage(gw);
 		Texture textContinueMessage(gw);
 		Texture textPieceNum(gw);
@@ -167,10 +175,10 @@ int main(int argc, char* args[])
 		Texture textStartingStrategy(gw);
 		Texture textStartingStrategyOptions(gw);
 
-		textPlayerBlack.loadFromRenderedText("BLACK Player", fontNormal);
-		textPlayerRed.loadFromRenderedText("WHITE Player", fontNormal);
-		textPlayerBlackScore.loadFromRenderedText("0", fontNormal);
-		textPlayerRedScore.loadFromRenderedText("0", fontNormal);
+		textPlayerOne.loadFromRenderedText("Player one", fontNormal);
+		textPlayerTwo.loadFromRenderedText("Player two", fontNormal);
+		textPlayerOneScore.loadFromRenderedText("0", fontNormal);
+		textPlayerTwoScore.loadFromRenderedText("0", fontNormal);
 		textWinMessage.loadFromRenderedText("", fontBig);
 		textContinueMessage.loadFromRenderedText("Press 'R' to start another game", fontNormal);
 		textPieceNum.loadFromRenderedText("Piece : 1", fontNormal);
@@ -240,6 +248,7 @@ int main(int argc, char* args[])
 						win = false;
 						turnNr = 0;
 						swap2choice3 = false;
+						stratChosen = false;
 						textPieceNum.loadFromRenderedText("Piece : 1", fontNormal);
 						resetSquares(gridSquares);
 					}
@@ -333,17 +342,17 @@ int main(int argc, char* args[])
 								if (win)
 								{
 									std::cout << "Player won";
-									if (turnNr % 2== 0)
+									if (playerTurn == PLAYER_ONE)
 									{
 										playerBlackScore++;
-										textPlayerBlackScore.loadFromRenderedText(std::to_string(playerBlackScore), fontNormal);
-										textWinMessage.loadFromRenderedText("Player Black won!", fontNormal);
+										textPlayerOneScore.loadFromRenderedText(std::to_string(playerBlackScore), fontNormal);
+										textWinMessage.loadFromRenderedText("Player One won!", fontNormal);
 									}
 									else
 									{
 										playerWhiteScore++;
-										textPlayerRedScore.loadFromRenderedText(std::to_string(playerWhiteScore), fontNormal);
-										textWinMessage.loadFromRenderedText("Player White won!", fontBig);
+										textPlayerTwoScore.loadFromRenderedText(std::to_string(playerWhiteScore), fontNormal);
+										textWinMessage.loadFromRenderedText("Player Two won!", fontBig);
 									}
 								}
 								else
@@ -380,24 +389,23 @@ int main(int argc, char* args[])
 
 			//Render the menu
 			gw.setViewport(menuViewport.viewportRect());
-				//Game title
-			textTitle.render(menuViewport.width()/2 -textTitle.getWidth()/2, menuViewport.height() / 100);
+
 				//Starting strategy
-			textStartingStrategy.renderCentered(menuViewport.width() / 2, menuViewport.height() / 50 + textTitle.getHeight());
+			textStartingStrategy.renderCentered(menuViewport.width() / 2, menuViewport.height() / 50 + textTitlee.getHeight());
 			if (startStrat == STRATEGY_NOT_SET)
 			{
-				textStartingStrategyOptions.renderCentered(menuViewport.width() / 2, menuViewport.height() / 25 + textTitle.getHeight() + textTitle.getHeight());
+				textStartingStrategyOptions.renderCentered(menuViewport.width() / 2, menuViewport.height() / 25 + textTitlee.getHeight() + textTitlee.getHeight());
 			}
 				//Piece counter
 			else
 			{
-				textPieceNum.render(menuViewport.width() / 10, menuViewport.height() / 25 + textTitle.getHeight() + textTitle.getHeight());
+				textPieceNum.render(menuViewport.width() / 10, menuViewport.height() / 25 + textTitlee.getHeight() + textTitlee.getHeight());
 			}
 
 				//Usefull variables
 			int middleOfViewport = menuViewport.height() / 2;
-			int blackX = menuViewport.width() / 10 + textPlayerBlack.getWidth() / 2;
-			int whiteX = menuViewport.width() - textPlayerRed.getWidth()/2 - menuViewport.width() / 10;
+			int blackX = menuViewport.width() / 10 + textPlayerOne.getWidth() / 2;
+			int whiteX = menuViewport.width() - textPlayerTwo.getWidth()/2 - menuViewport.width() / 10;
 				
 				//Swap choices
 			if (!stratChosen && turnNr == 3)
@@ -423,11 +431,11 @@ int main(int argc, char* args[])
 				textPlayerTurn.loadFromRenderedText("Player's TWO turn", fontNormal);
 			textPlayerTurn.renderCentered(menuViewport.width() / 2, middleOfViewport - textPlayerTurn.getHeight() * 2);
 				//Player black,white text
-			textPlayerBlack.renderCentered(blackX, middleOfViewport);
-			textPlayerRed.renderCentered(whiteX, middleOfViewport);
+			textPlayerOne.renderCentered(blackX, middleOfViewport);
+			textPlayerTwo.renderCentered(whiteX, middleOfViewport);
 				//Player black,white score
-			textPlayerBlackScore.renderCentered(blackX, middleOfViewport + menuViewport.height() / 10);
-			textPlayerRedScore.renderCentered(whiteX, middleOfViewport + menuViewport.height() / 10);
+			textPlayerOneScore.renderCentered(blackX, middleOfViewport + menuViewport.height() / 10);
+			textPlayerTwoScore.renderCentered(whiteX, middleOfViewport + menuViewport.height() / 10);
 
 				//Render win message when players win
 			if (win)
@@ -435,7 +443,12 @@ int main(int argc, char* args[])
 				textWinMessage.renderCentered(menuViewport.width() / 2, menuViewport.height() / 3);
 				textContinueMessage.renderCentered(menuViewport.width() / 2, menuViewport.height() / 3 + textWinMessage.getHeight());
 			}
-			
+
+			//Render everything
+			for (auto r : rendVect)
+			{
+				r->render();
+			}
 
 			//Render window
 			gw.update();

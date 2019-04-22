@@ -15,12 +15,12 @@ private:
 	//Image dimensions
 	int privWidth;
 	int privHeight;
-	GameWindow & gameWindow;
+	const GameWindow & gameWindow;
 
 
 public:
 	//Initializes variables
-	Texture(GameWindow &gw);
+	Texture(const GameWindow &gw);
 
 	//Deallocates memory
 	~Texture();
@@ -29,7 +29,7 @@ public:
 	bool loadFromFile(std::string path);
 
 	//Creates image from font string
-	bool loadFromRenderedText(std::string textureText, TTF_Font *gFont, SDL_Color textColor = { 0,0,0 });
+	bool loadFromRenderedText(std::string textureText,TTF_Font *gFont,const SDL_Color textColor = { 0,0,0 });
 
 	//Deallocates texture
 	void free();

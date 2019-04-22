@@ -1,6 +1,6 @@
 #include "Texture.h"
 
-Texture::Texture(GameWindow &gw) : gameWindow(gw)
+Texture::Texture(const GameWindow &gw) : gameWindow(gw)
 {
 	//Initialize
 	privTexture = NULL;
@@ -60,7 +60,7 @@ bool Texture::loadFromFile(std::string path)
 	return privTexture != NULL;
 }
 
-bool Texture::loadFromRenderedText(std::string textureText, TTF_Font *font, SDL_Color textColor)
+bool Texture::loadFromRenderedText(std::string textureText,TTF_Font *font, const SDL_Color textColor)
 {
 	//Get rid of preexisting texture
 	free();
