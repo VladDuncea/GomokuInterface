@@ -4,6 +4,8 @@ GameWindow::GameWindow(int screen_width,int screen_height): SCREEN_HEIGHT(screen
 {
 	//Initialization flag
 	bool success = true;
+	privWindow = NULL;
+	privRenderer = NULL;
 
 	//Initialize SDL
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)

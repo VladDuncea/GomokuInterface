@@ -18,7 +18,7 @@ class GameWindow
 	const int SCREEN_WIDTH, SCREEN_HEIGHT;
 
 
-	GameWindow(GameWindow &gw):SCREEN_HEIGHT(0),SCREEN_WIDTH(0) {};
+	GameWindow(GameWindow& gw) :SCREEN_HEIGHT(0), SCREEN_WIDTH(0) { privWindow = NULL; privRenderer = NULL; };
 
 public:
 	GameWindow(int screen_width,int screen_height);

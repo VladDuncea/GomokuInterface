@@ -16,6 +16,22 @@
 #define TOTAL_BUTTONS GRID_HEIGHT*GRID_WIDTH
 #define FONT "timesbd.ttf"
 
+enum TextBoxes
+{
+	TEXTBOX_TITLE =0,
+	TEXTBOX_PONE,
+	TEXTBOX_PTWO,
+	TEXTBOX_PONE_SCORE,
+	TEXTBOX_PTWO_SCORE,
+	TEXTBOX_WINMSG,
+	TEXTBOX_CONTMSG,
+	TEXTBOX_PIECENUM,
+	TEXTBOX_PTURN,
+	TEXTBOX_STRAT_CHOICE,
+	TEXTBOX_STRAT_START,
+	TEXTBOX_STRAT_OPT
+};
+
 enum SquareSprite
 {
 	SQUARE_DEFAULT = 0,
@@ -37,7 +53,6 @@ enum StartStrategy
 	STRATEGY_SWAP = 1,
 	STRATEGY_SWAP2 = 2
 };
-
 
 bool checkForWin(int x, int y, std::vector<GridSquare> &gs,int squareId)
 {
@@ -101,10 +116,97 @@ void resetSquares(std::vector<GridSquare> &gs)
 
 }
 
+bool initTextBoxes(GameWindow &gw, std::vector<TextBox*> & textBoxVect,Viewport &menuViewport)
+{
+	//Usefull variables
+	int middleOfViewport = menuViewport.height() / 2;
+
+	//Load font
+	TTF_Font* fontLarge = NULL;
+	TTF_Font* fontBig = NULL;
+	TTF_Font* fontNormal = NULL;
+	fontLarge = TTF_OpenFont(FONT, 20 + MENU_WIDTH / 20);
+	fontBig = TTF_OpenFont(FONT, 10 + MENU_WIDTH / 40);
+	fontNormal = TTF_OpenFont(FONT, 8 + MENU_WIDTH / 40);
+	if (fontBig == NULL || fontNormal == NULL)
+	{
+		printf("Failed to load font! SDL_ttf Error: %s\n", TTF_GetError());
+		exit(-1);
+	}
+
+	//Static text
+		//Title
+	TextBox* textTitle = new TextBox(gw, "Gomoku Interface", fontLarge, { 214, 118, 40 }); //TODO error checking
+	textTitle->setRendCentered(true);
+	textTitle->setRenderPos(menuViewport.width() / 2, menuViewport.height() / 100 + textTitle->getHeight() / 2);
+	textBoxVect.push_back(textTitle);
+		//Player text
+	TextBox* textPlayerOne = new TextBox(gw,"Player one",fontNormal);
+	int OneX = menuViewport.width() / 10 + textPlayerOne->getWidth() / 2;
+	textPlayerOne->setRendCentered(true);
+	textPlayerOne->setRenderPos(OneX, middleOfViewport);
+	textBoxVect.push_back(textPlayerOne);
+	TextBox* textPlayerTwo = new TextBox(gw,"Player two",fontNormal);
+	int TwoX = menuViewport.width() - textPlayerTwo->getWidth() / 2 - menuViewport.width() / 10;
+	textPlayerTwo->setRendCentered(true);
+	textPlayerTwo->setRenderPos(TwoX, middleOfViewport);
+	textBoxVect.push_back(textPlayerTwo);
+
+	//Changing text
+		//Player score
+	TextBox* textPlayerOneScore = new TextBox(gw,"0",fontNormal);
+	textPlayerOneScore->setRendCentered(true);
+	textPlayerOneScore->setRenderPos(OneX, middleOfViewport + menuViewport.height() / 10);
+	textBoxVect.push_back(textPlayerOneScore);
+	TextBox* textPlayerTwoScore = new TextBox(gw, "0",fontNormal);
+	textPlayerTwoScore->setRendCentered(true);
+	textPlayerTwoScore->setRenderPos(TwoX, middleOfViewport + menuViewport.height() / 10);
+	textBoxVect.push_back(textPlayerTwoScore);
+
+		//Text messages
+	//Win message
+	TextBox* textWinMessage = new TextBox(gw,"placeholder",fontBig);
+	textWinMessage->setRendCentered(true);
+	textWinMessage->setRenderPos(menuViewport.width() / 2, menuViewport.height() / 3);
+	textWinMessage->setRendEnabled(false);
+	textBoxVect.push_back(textWinMessage);
+	//Continue message
+	TextBox* textContinueMessage = new TextBox(gw, "Press 'R' to start another game", fontNormal);
+	textContinueMessage->setRendCentered(true);
+	textContinueMessage->setRenderPos(menuViewport.width() / 2, menuViewport.height() / 3 + textWinMessage->getHeight());
+	textContinueMessage->setRendEnabled(false);
+	textBoxVect.push_back(textContinueMessage);
+	//Piece counter
+	TextBox* textPieceNum = new TextBox(gw, "Piece : 1",fontNormal);
+	textPieceNum->setRenderPos(menuViewport.width() / 10, menuViewport.height() / 25 + textTitle->getHeight());
+	textPieceNum->setRendEnabled(false);
+	textBoxVect.push_back(textPieceNum);
+	//Player turn indicator
+	TextBox* textPlayerTurn = new TextBox(gw, "placeholder",fontNormal);
+	textPlayerTurn->setRendCentered(true);
+	textPlayerTurn->setRenderPos(menuViewport.width() / 2, middleOfViewport - textPlayerTurn->getHeight() * 2);
+	textBoxVect.push_back(textPlayerTurn);
+	//Strategy choices
+	TextBox* textStrategyChoice = new TextBox(gw,"placeholder",fontNormal);
+	textStrategyChoice->setRendCentered(true);
+	textStrategyChoice->setRenderPos(menuViewport.width() / 2, middleOfViewport - textPlayerTurn->getHeight() * 4);
+	textStrategyChoice->setRendEnabled(false);
+	textBoxVect.push_back(textStrategyChoice);
+	//Initial starting strategy text
+	TextBox* textStartingStrategy = new TextBox(gw, "Please choose a starting strategy !",fontNormal);
+	textStartingStrategy->setRendCentered(true);
+	textStartingStrategy->setRenderPos(menuViewport.width() / 2, menuViewport.height() / 50 + textTitle->getHeight());
+	textBoxVect.push_back(textStartingStrategy);
+	//Strategy options
+	TextBox* textStartingStrategyOptions = new TextBox(gw, "1 - SWAP || 2 - SWAP2",fontNormal);
+	textStartingStrategyOptions->setRendCentered(true);
+	textStartingStrategyOptions->setRenderPos(menuViewport.width() / 2, textStartingStrategy->getRenderPos().y +textStartingStrategy->getHeight()*2);
+	textBoxVect.push_back(textStartingStrategyOptions);
+	return true;
+}
 
 int main(int argc, char* args[])
 {
-
 	//Start up SDL and create game window
 	GameWindow gw(GRID_WIDTH*SQUARE_WIDTH + MENU_WIDTH, GRID_HEIGHT*SQUARE_HEIGHT);
 
@@ -115,75 +217,36 @@ int main(int argc, char* args[])
 	//Load assets
 
 		//Square sprites
-		Texture SquareSpriteSheet(gw);
-		try
-		{
-			SquareSpriteSheet.loadFromFile("pieces3.png");
-		}
-		catch (int e)
-		{
-			printf("Failed to load square sprite texture!\n");
-			exit(-1);
-		}
+	Texture SquareSpriteSheet(gw);
+	try
+	{
+		SquareSpriteSheet.loadFromFile("pieces3.png");
+	}
+	catch (int e)
+	{
+		printf("Failed to load square sprite texture!\n");
+		exit(-1);
+	}
 
-		//The clips from the sprite sheet
-		SDL_Rect spriteClips[SQUARE_SPRITE_TOTAL];
+	//Store all the renderable objects
+	std::vector<Renderable*> rendVect;
+
+	//Store all the text obj
+	std::vector<TextBox*> textBoxVect;
+	//Initialise them
+	initTextBoxes(gw, textBoxVect, menuViewport);
+
+	//The clips from the sprite sheet
+	SDL_Rect spriteClips[SQUARE_SPRITE_TOTAL];
 	
-		//Select sprites in sprite sheet
-		for (int i = 0; i < SQUARE_SPRITE_TOTAL; ++i)
-		{
-			spriteClips[i].x = 0;
-			spriteClips[i].y = i * 400;
-			spriteClips[i].w = 400;
-			spriteClips[i].h = 400;
-		}
-
-		//Load font
-		TTF_Font *fontLarge = NULL;
-		TTF_Font *fontBig = NULL;
-		TTF_Font *fontNormal = NULL;
-		fontLarge = TTF_OpenFont(FONT, 20 +MENU_WIDTH/20);
-		fontBig = TTF_OpenFont(FONT, 10 + MENU_WIDTH / 40);
-		fontNormal = TTF_OpenFont(FONT, 8 + MENU_WIDTH / 40);
-		if (fontBig == NULL || fontNormal == NULL)
-		{
-			printf("Failed to load font! SDL_ttf Error: %s\n", TTF_GetError());
-			exit(-1);
-		}
-		
-		//Store all the renderable objects
-		std::vector<Renderable *> rendVect;
-
-		//Create title
-		TextBox textTitlee(gw, "Gomoku Interface", fontLarge,{ 214, 118, 40 }); //TODO error checking
-		textTitlee.setRendCentered(true);
-		textTitlee.setRenderPos(menuViewport.width() / 2, menuViewport.height() / 100 + textTitlee.getHeight() / 2);
-		rendVect.push_back(&textTitlee);
-		/*if (!textTitle.loadFromRenderedText("GomokuInterface", fontLarge, { 214, 118, 40 }))
-		{
-			printf("Failed to render text texture!\n");
-		}*/
-		Texture textPlayerTwo(gw);
-		Texture textPlayerOne(gw);
-		Texture textPlayerTwoScore(gw);
-		Texture textPlayerOneScore(gw);
-		Texture textWinMessage(gw);
-		Texture textContinueMessage(gw);
-		Texture textPieceNum(gw);
-		Texture textPlayerTurn(gw);
-		Texture textStrategyChoice(gw);
-		Texture textStartingStrategy(gw);
-		Texture textStartingStrategyOptions(gw);
-
-		textPlayerOne.loadFromRenderedText("Player one", fontNormal);
-		textPlayerTwo.loadFromRenderedText("Player two", fontNormal);
-		textPlayerOneScore.loadFromRenderedText("0", fontNormal);
-		textPlayerTwoScore.loadFromRenderedText("0", fontNormal);
-		textWinMessage.loadFromRenderedText("", fontBig);
-		textContinueMessage.loadFromRenderedText("Press 'R' to start another game", fontNormal);
-		textPieceNum.loadFromRenderedText("Piece : 1", fontNormal);
-		textStartingStrategy.loadFromRenderedText("Please choose a starting strategy !", fontNormal);
-		textStartingStrategyOptions.loadFromRenderedText("1 - SWAP || 2 - SWAP2", fontNormal);
+	//Select sprites in sprite sheet
+	for (int i = 0; i < SQUARE_SPRITE_TOTAL; ++i)
+	{
+		spriteClips[i].x = 0;
+		spriteClips[i].y = i * 400;
+		spriteClips[i].w = 400;
+		spriteClips[i].h = 400;
+	}
 
 	//All the squares in the grid
 	std::vector<GridSquare> gridSquares;
@@ -213,7 +276,7 @@ int main(int argc, char* args[])
 	//Set player turn
 	//TODO: ask how the first player is chosen
 	Players playerTurn = PLAYER_ONE;
-	textPlayerTurn.loadFromRenderedText("Player's ONE turn", fontNormal);
+	textBoxVect[TEXTBOX_PTURN]->chageText("Player ONE turn");
 
 	int turnNr = 0;
 	bool swap2choice3 = false;
@@ -245,11 +308,13 @@ int main(int argc, char* args[])
 				case SDLK_r:
 					if (win)
 					{
+						textBoxVect[TEXTBOX_WINMSG]->setRendEnabled(false);
+						textBoxVect[TEXTBOX_CONTMSG]->setRendEnabled(false);
 						win = false;
 						turnNr = 0;
 						swap2choice3 = false;
 						stratChosen = false;
-						textPieceNum.loadFromRenderedText("Piece : 1", fontNormal);
+						(textBoxVect[TEXTBOX_PIECENUM])->chageText("Piece: 1");
 						resetSquares(gridSquares);
 					}
 					break;
@@ -257,10 +322,15 @@ int main(int argc, char* args[])
 					if (startStrat == STRATEGY_NOT_SET)
 					{
 						startStrat = STRATEGY_SWAP;
-						textStartingStrategy.loadFromRenderedText("Chosen starting rule : SWAP", fontNormal);
+						(textBoxVect[TEXTBOX_STRAT_START])->chageText("Chosen starting rule : SWAP");
+						//Starting strategy options are hidden now
+						(textBoxVect[TEXTBOX_STRAT_OPT])->setRendEnabled(false);
+						//Piece counter is now shown
+						(textBoxVect[TEXTBOX_PIECENUM])->setRendEnabled(true);
 					}
 					else if (turnNr == 3 || (turnNr==5&&startStrat==STRATEGY_SWAP2))
 					{
+						textBoxVect[TEXTBOX_STRAT_CHOICE]->setRendEnabled(false);
 						stratChosen = true;
 					}
 					break;
@@ -268,12 +338,17 @@ int main(int argc, char* args[])
 					if (startStrat == STRATEGY_NOT_SET)
 					{
 						startStrat = STRATEGY_SWAP2;
-						textStartingStrategy.loadFromRenderedText("Chosen starting rule : SWAP2", fontNormal);
+						(textBoxVect[TEXTBOX_STRAT_START])->chageText("Chosen starting rule : SWAP2");
+						//Starting strategy options are hidden now
+						(textBoxVect[TEXTBOX_STRAT_OPT])->setRendEnabled(false);
+						//Piece counter is now shown
+						(textBoxVect[TEXTBOX_PIECENUM])->setRendEnabled(true);
 					}
 					else if (!stratChosen && turnNr == 3|| (turnNr == 5 && swap2choice3))
 					{
 						playerTurn = playerTurn == PLAYER_ONE ? PLAYER_TWO : PLAYER_ONE;
 						stratChosen = true;
+						textBoxVect[TEXTBOX_STRAT_CHOICE]->setRendEnabled(false);
 					}
 					break;
 				case SDLK_3:
@@ -281,6 +356,7 @@ int main(int argc, char* args[])
 					{
 						swap2choice3 = true;
 						stratChosen = true;
+						textBoxVect[TEXTBOX_STRAT_CHOICE]->setRendEnabled(false);
 					}
 					break;
 				case SDLK_ESCAPE:
@@ -345,14 +421,14 @@ int main(int argc, char* args[])
 									if (playerTurn == PLAYER_ONE)
 									{
 										playerBlackScore++;
-										textPlayerOneScore.loadFromRenderedText(std::to_string(playerBlackScore), fontNormal);
-										textWinMessage.loadFromRenderedText("Player One won!", fontNormal);
+										(textBoxVect[TEXTBOX_PONE_SCORE])->chageText(std::to_string(playerBlackScore).c_str());
+										(textBoxVect[TEXTBOX_WINMSG])->chageText("Player One won!");
 									}
 									else
 									{
 										playerWhiteScore++;
-										textPlayerTwoScore.loadFromRenderedText(std::to_string(playerWhiteScore), fontNormal);
-										textWinMessage.loadFromRenderedText("Player Two won!", fontBig);
+										(textBoxVect[TEXTBOX_PTWO_SCORE])->chageText(std::to_string(playerWhiteScore).c_str());
+										(textBoxVect[TEXTBOX_WINMSG])->chageText("Player Two won!");
 									}
 								}
 								else
@@ -365,7 +441,7 @@ int main(int argc, char* args[])
 									}
 									std::string text ("Piece : ");
 									text+=std::to_string(turnNr+1);
-									textPieceNum.loadFromRenderedText(text, fontNormal);
+									(textBoxVect[TEXTBOX_PIECENUM])->chageText(text.c_str());
 								}
 
 							}
@@ -390,65 +466,45 @@ int main(int argc, char* args[])
 			//Render the menu
 			gw.setViewport(menuViewport.viewportRect());
 
-				//Starting strategy
-			textStartingStrategy.renderCentered(menuViewport.width() / 2, menuViewport.height() / 50 + textTitlee.getHeight());
-			if (startStrat == STRATEGY_NOT_SET)
-			{
-				textStartingStrategyOptions.renderCentered(menuViewport.width() / 2, menuViewport.height() / 25 + textTitlee.getHeight() + textTitlee.getHeight());
-			}
-				//Piece counter
-			else
-			{
-				textPieceNum.render(menuViewport.width() / 10, menuViewport.height() / 25 + textTitlee.getHeight() + textTitlee.getHeight());
-			}
-
-				//Usefull variables
-			int middleOfViewport = menuViewport.height() / 2;
-			int blackX = menuViewport.width() / 10 + textPlayerOne.getWidth() / 2;
-			int whiteX = menuViewport.width() - textPlayerTwo.getWidth()/2 - menuViewport.width() / 10;
+				
 				
 				//Swap choices
 			if (!stratChosen && turnNr == 3)
 			{
 				if (startStrat == STRATEGY_SWAP)
-					textStrategyChoice.loadFromRenderedText("Do you want to 1-do nothing || 2-swap ", fontNormal);
+					textBoxVect[TEXTBOX_STRAT_CHOICE]->chageText("Do you want to 1-do nothing || 2-swap ");
 				else
-					textStrategyChoice.loadFromRenderedText("Do you want to 1-do nothing || 2-swap || 3-yes ", fontNormal);
-				textStrategyChoice.renderCentered(menuViewport.width() / 2, middleOfViewport - textPlayerTurn.getHeight() * 4);
+					textBoxVect[TEXTBOX_STRAT_CHOICE]->chageText("Do you want to 1-do nothing || 2-swap || 3-yes ");
+				textBoxVect[TEXTBOX_STRAT_CHOICE]->setRendEnabled(true);
 			}
 			else if (!stratChosen && turnNr == 5 && swap2choice3)
 			{
-				textStrategyChoice.loadFromRenderedText("Do you want to 1-do nothing || 2-swap ", fontNormal);
-				textStrategyChoice.renderCentered(menuViewport.width() / 2, middleOfViewport - textPlayerTurn.getHeight() * 4);
+				textBoxVect[TEXTBOX_STRAT_CHOICE]->chageText("Do you want to 1-do nothing || 2-swap ");
+				textBoxVect[TEXTBOX_STRAT_CHOICE]->setRendEnabled(true);
 			}
 			else if (turnNr == 4)
 				stratChosen = false;
 
 				//Turn indicator
 			if (playerTurn == PLAYER_ONE)
-				textPlayerTurn.loadFromRenderedText("Player's ONE turn",fontNormal);
+				textBoxVect[TEXTBOX_PTURN]->chageText("Player's One turn");
 			else
-				textPlayerTurn.loadFromRenderedText("Player's TWO turn", fontNormal);
-			textPlayerTurn.renderCentered(menuViewport.width() / 2, middleOfViewport - textPlayerTurn.getHeight() * 2);
-				//Player black,white text
-			textPlayerOne.renderCentered(blackX, middleOfViewport);
-			textPlayerTwo.renderCentered(whiteX, middleOfViewport);
-				//Player black,white score
-			textPlayerOneScore.renderCentered(blackX, middleOfViewport + menuViewport.height() / 10);
-			textPlayerTwoScore.renderCentered(whiteX, middleOfViewport + menuViewport.height() / 10);
-
+				textBoxVect[TEXTBOX_PTURN]->chageText("Player's Two turn");
+			
 				//Render win message when players win
 			if (win)
 			{
-				textWinMessage.renderCentered(menuViewport.width() / 2, menuViewport.height() / 3);
-				textContinueMessage.renderCentered(menuViewport.width() / 2, menuViewport.height() / 3 + textWinMessage.getHeight());
+				textBoxVect[TEXTBOX_WINMSG]->setRendEnabled(true);
+				textBoxVect[TEXTBOX_CONTMSG]->setRendEnabled(true);
 			}
+
+			//Render textboxes
+			for (auto t : textBoxVect)
+				t->render();
 
 			//Render everything
 			for (auto r : rendVect)
-			{
 				r->render();
-			}
 
 			//Render window
 			gw.update();
