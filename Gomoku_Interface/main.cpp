@@ -8,13 +8,15 @@
 #include <windows.h>
 #include "TextBox.h"
 
-#define GRID_WIDTH  20
-#define GRID_HEIGHT  23
-#define SQUARE_WIDTH 30
-#define SQUARE_HEIGHT  SQUARE_WIDTH
-#define MENU_WIDTH  SQUARE_WIDTH*15
-#define TOTAL_BUTTONS GRID_HEIGHT*GRID_WIDTH
-#define FONT "timesbd.ttf"
+constexpr auto SCALING = 1.7;
+
+constexpr auto GRID_WIDTH = 20;
+constexpr auto GRID_HEIGHT = 23;
+const int SQUARE_WIDTH = 30 * SCALING;
+const int SQUARE_HEIGHT = SQUARE_WIDTH;
+const int MENU_WIDTH = 400 * SCALING;
+constexpr auto TOTAL_BUTTONS = GRID_HEIGHT * GRID_WIDTH;
+constexpr auto FONT = "timesbd.ttf";
 
 enum TextBoxes
 {
@@ -125,9 +127,9 @@ bool initTextBoxes(GameWindow &gw, std::vector<TextBox*> & textBoxVect,Viewport 
 	TTF_Font* fontLarge = NULL;
 	TTF_Font* fontBig = NULL;
 	TTF_Font* fontNormal = NULL;
-	fontLarge = TTF_OpenFont(FONT, 20 + MENU_WIDTH / 20);
-	fontBig = TTF_OpenFont(FONT, 10 + MENU_WIDTH / 40);
-	fontNormal = TTF_OpenFont(FONT, 8 + MENU_WIDTH / 40);
+	fontLarge = TTF_OpenFont(FONT, 40 * SCALING);
+	fontBig = TTF_OpenFont(FONT, 20 * SCALING);
+	fontNormal = TTF_OpenFont(FONT, 16 * SCALING);
 	if (fontBig == NULL || fontNormal == NULL)
 	{
 		printf("Failed to load font! SDL_ttf Error: %s\n", TTF_GetError());
@@ -220,7 +222,7 @@ int main(int argc, char* args[])
 	Texture SquareSpriteSheet(gw);
 	try
 	{
-		SquareSpriteSheet.loadFromFile("pieces3.png");
+		SquareSpriteSheet.loadFromFile("GomokuPieces.png");
 	}
 	catch (int e)
 	{
@@ -376,9 +378,17 @@ int main(int argc, char* args[])
 				//Get mouse position
 				int x, y;
 				//Get mouse
-				SDL_GetMouseState(&x, &y);
+				if (e.type == SDL_MOUSEBUTTONDOWN)
+				{
+					//Accurate position from click
+					x = e.motion.x;
+					y = e.motion.y;
+				}
+				//Lag free input for showing sprite
+				else
+					SDL_GetMouseState(&x, &y);
 
-				printf("x: %d y:%d\n", x, y);
+				//printf("x: %d y:%d\n", x, y);
 
 				//Set all unlocked grid squares to empty
 				for (int i = 0; i < GRID_HEIGHT*GRID_WIDTH; i++)
@@ -447,16 +457,16 @@ int main(int argc, char* args[])
 									if (turnNr == 3)
 									{
 										if (startStrat == STRATEGY_SWAP)
-											textBoxVect[TEXTBOX_STRAT_CHOICE]->chageText("Do you want to 1-do nothing || 2-swap ");
+											textBoxVect[TEXTBOX_STRAT_CHOICE]->chageText("Choose: 1-nothing || 2-swap");
 										else
-											textBoxVect[TEXTBOX_STRAT_CHOICE]->chageText("Do you want to 1-do nothing || 2-swap || 3-yes ");
+											textBoxVect[TEXTBOX_STRAT_CHOICE]->chageText("Choose: 1-nothing || 2-swap || 3-place 2");
 										textBoxVect[TEXTBOX_STRAT_CHOICE]->setRendEnabled(true);
 										hasStratToChose = true;
 									}
-									else if (!hasStratToChose && turnNr == 5 && swap2choice3)
+									else if (turnNr == 5 && swap2choice3)
 									{
 										hasStratToChose = true;
-										textBoxVect[TEXTBOX_STRAT_CHOICE]->chageText("Do you want to 1-do nothing || 2-swap ");
+										textBoxVect[TEXTBOX_STRAT_CHOICE]->chageText("Choose: 1-nothing || 2-swap");
 										textBoxVect[TEXTBOX_STRAT_CHOICE]->setRendEnabled(true);
 									}
 
