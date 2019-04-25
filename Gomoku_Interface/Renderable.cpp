@@ -18,7 +18,7 @@ void Renderable::setRenderPos(int x, int y)
 	protecRendPos.y = y;
 }
 
-POINT Renderable::getRenderPos()
+SDL_Point Renderable::getRenderPos()
 {
 	return protecRendPos;
 }

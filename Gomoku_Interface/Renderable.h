@@ -1,11 +1,10 @@
 #pragma once
 #include "GameWindow.h"
-#include <Windows.h>
 
 class Renderable
 {
 protected:
-	POINT protecRendPos;
+	SDL_Point protecRendPos;
 	bool protecRendCentered;
 	bool protecRendEnabled;
 public:
@@ -13,7 +12,7 @@ public:
 	virtual ~Renderable() = 0;
 	virtual void render(void)=0;
 	void setRenderPos(int x, int y);
-	POINT getRenderPos();
+	SDL_Point getRenderPos();
 	void setRendCentered(bool b);
 	void setRendEnabled(bool b);
 };

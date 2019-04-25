@@ -156,11 +156,11 @@ bool initTextBoxes(GameWindow &gw, std::vector<TextBox*> & textBoxVect,Viewport 
 		//Player score
 	TextBox* textPlayerOneScore = new TextBox(gw,"0",fontNormal);
 	textPlayerOneScore->setRendCentered(true);
-	textPlayerOneScore->setRenderPos(OneX, middleOfViewport + menuViewport.height() / 10);
+	textPlayerOneScore->setRenderPos(OneX, textPlayerOne->getRenderPos().y + textPlayerOne->getHeight()*2);
 	textBoxVect.push_back(textPlayerOneScore);
 	TextBox* textPlayerTwoScore = new TextBox(gw, "0",fontNormal);
 	textPlayerTwoScore->setRendCentered(true);
-	textPlayerTwoScore->setRenderPos(TwoX, middleOfViewport + menuViewport.height() / 10);
+	textPlayerTwoScore->setRenderPos(TwoX, textPlayerTwo->getRenderPos().y + textPlayerOne->getHeight() * 2);
 	textBoxVect.push_back(textPlayerTwoScore);
 
 		//Text messages
@@ -264,12 +264,11 @@ int main(int argc, char* args[])
 	//Game variables
 	//
 
-	//Main loop flag
-	bool quit = false;
-
 	//Event handler
 	SDL_Event e;
 
+	//Main loop flag
+	bool quit = false;
 	//Set win variable
 	bool win = false;
 
@@ -285,7 +284,7 @@ int main(int argc, char* args[])
 	int playerWhiteScore = 0;
 
 	StartStrategy startStrat = STRATEGY_NOT_SET;
-	bool stratChosen = false;
+	bool hasStratToChose = false;
 
 	//While application is running
 	while (!quit)
@@ -313,7 +312,7 @@ int main(int argc, char* args[])
 						win = false;
 						turnNr = 0;
 						swap2choice3 = false;
-						stratChosen = false;
+						hasStratToChose = false;
 						(textBoxVect[TEXTBOX_PIECENUM])->chageText("Piece: 1");
 						resetSquares(gridSquares);
 					}
@@ -328,10 +327,10 @@ int main(int argc, char* args[])
 						//Piece counter is now shown
 						(textBoxVect[TEXTBOX_PIECENUM])->setRendEnabled(true);
 					}
-					else if (turnNr == 3 || (turnNr==5&&startStrat==STRATEGY_SWAP2))
+					else if (hasStratToChose &&(turnNr == 3 || (turnNr==5&&startStrat==STRATEGY_SWAP2)))
 					{
 						textBoxVect[TEXTBOX_STRAT_CHOICE]->setRendEnabled(false);
-						stratChosen = true;
+						hasStratToChose = false;
 					}
 					break;
 				case SDLK_2:
@@ -344,18 +343,18 @@ int main(int argc, char* args[])
 						//Piece counter is now shown
 						(textBoxVect[TEXTBOX_PIECENUM])->setRendEnabled(true);
 					}
-					else if (!stratChosen && turnNr == 3|| (turnNr == 5 && swap2choice3))
+					else if (hasStratToChose &&( turnNr == 3|| (turnNr == 5 && swap2choice3)))
 					{
 						playerTurn = playerTurn == PLAYER_ONE ? PLAYER_TWO : PLAYER_ONE;
-						stratChosen = true;
+						hasStratToChose = false;
 						textBoxVect[TEXTBOX_STRAT_CHOICE]->setRendEnabled(false);
 					}
 					break;
 				case SDLK_3:
-					if (!stratChosen && turnNr == 3 && startStrat ==STRATEGY_SWAP2)
+					if (hasStratToChose && (turnNr == 3 && startStrat ==STRATEGY_SWAP2))
 					{
 						swap2choice3 = true;
-						stratChosen = true;
+						hasStratToChose = false;
 						textBoxVect[TEXTBOX_STRAT_CHOICE]->setRendEnabled(false);
 					}
 					break;
@@ -371,7 +370,7 @@ int main(int argc, char* args[])
 			gw.clear();
 
 			//If mouse event happened and the game is not over and a starting strategy is set
-			if (!win&& startStrat!=STRATEGY_NOT_SET && (e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN))
+			if ( !hasStratToChose && !win&& startStrat!=STRATEGY_NOT_SET && (e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN))
 			{
 
 				//Get mouse position
@@ -430,18 +429,38 @@ int main(int argc, char* args[])
 										(textBoxVect[TEXTBOX_PTWO_SCORE])->chageText(std::to_string(playerWhiteScore).c_str());
 										(textBoxVect[TEXTBOX_WINMSG])->chageText("Player Two won!");
 									}
+									textBoxVect[TEXTBOX_WINMSG]->setRendEnabled(true);
+									textBoxVect[TEXTBOX_CONTMSG]->setRendEnabled(true);
 								}
 								else
 								{
 									//If the current player did not win advance game
 									turnNr++;
-									if (turnNr>2 && (!swap2choice3 || turnNr >4))
+									if (turnNr > 2 && (!swap2choice3 || turnNr > 4))
 									{
 										playerTurn = playerTurn == PLAYER_ONE ? PLAYER_TWO : PLAYER_ONE;
 									}
-									std::string text ("Piece : ");
-									text+=std::to_string(turnNr+1);
+									std::string text("Piece : ");
+									text += std::to_string(turnNr + 1);
 									(textBoxVect[TEXTBOX_PIECENUM])->chageText(text.c_str());
+
+									if (turnNr == 3)
+									{
+										if (startStrat == STRATEGY_SWAP)
+											textBoxVect[TEXTBOX_STRAT_CHOICE]->chageText("Do you want to 1-do nothing || 2-swap ");
+										else
+											textBoxVect[TEXTBOX_STRAT_CHOICE]->chageText("Do you want to 1-do nothing || 2-swap || 3-yes ");
+										textBoxVect[TEXTBOX_STRAT_CHOICE]->setRendEnabled(true);
+										hasStratToChose = true;
+									}
+									else if (!hasStratToChose && turnNr == 5 && swap2choice3)
+									{
+										hasStratToChose = true;
+										textBoxVect[TEXTBOX_STRAT_CHOICE]->chageText("Do you want to 1-do nothing || 2-swap ");
+										textBoxVect[TEXTBOX_STRAT_CHOICE]->setRendEnabled(true);
+									}
+
+									
 								}
 
 							}
@@ -466,38 +485,12 @@ int main(int argc, char* args[])
 			//Render the menu
 			gw.setViewport(menuViewport.viewportRect());
 
-				
-				
-				//Swap choices
-			if (!stratChosen && turnNr == 3)
-			{
-				if (startStrat == STRATEGY_SWAP)
-					textBoxVect[TEXTBOX_STRAT_CHOICE]->chageText("Do you want to 1-do nothing || 2-swap ");
-				else
-					textBoxVect[TEXTBOX_STRAT_CHOICE]->chageText("Do you want to 1-do nothing || 2-swap || 3-yes ");
-				textBoxVect[TEXTBOX_STRAT_CHOICE]->setRendEnabled(true);
-			}
-			else if (!stratChosen && turnNr == 5 && swap2choice3)
-			{
-				textBoxVect[TEXTBOX_STRAT_CHOICE]->chageText("Do you want to 1-do nothing || 2-swap ");
-				textBoxVect[TEXTBOX_STRAT_CHOICE]->setRendEnabled(true);
-			}
-			else if (turnNr == 4)
-				stratChosen = false;
-
 				//Turn indicator
 			if (playerTurn == PLAYER_ONE)
 				textBoxVect[TEXTBOX_PTURN]->chageText("Player's One turn");
 			else
 				textBoxVect[TEXTBOX_PTURN]->chageText("Player's Two turn");
 			
-				//Render win message when players win
-			if (win)
-			{
-				textBoxVect[TEXTBOX_WINMSG]->setRendEnabled(true);
-				textBoxVect[TEXTBOX_CONTMSG]->setRendEnabled(true);
-			}
-
 			//Render textboxes
 			for (auto t : textBoxVect)
 				t->render();
