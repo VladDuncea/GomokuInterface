@@ -4,15 +4,7 @@
 GridSquare::GridSquare(Viewport &viewp, const int buttonHeight, const int buttonWidth, const int nrStates, Texture &spriteSheet, SDL_Rect *spriteClips) : gameViewport(viewp), BUTTON_HEIGHT(buttonHeight), BUTTON_WIDTH(buttonWidth), TOTAL_STATES(nrStates), gridsprite(spriteSheet), spriteClips(spriteClips)
 {
 	privLocked = false;
-	privPosition.x = 0;
-	privPosition.y = 0;
 	privCurrentSprite = 0;
-}
-
-void GridSquare::setPosition(int x, int y)
-{
-	privPosition.x = x;
-	privPosition.y = y;
 }
 
 int GridSquare::width()
@@ -46,8 +38,7 @@ bool GridSquare::locked()
 	return privLocked;
 }
 
-void GridSquare::render(int width, int height)
+void GridSquare::render()
 {
-	//Show current button sprite
-	gridsprite.render(privPosition.x, privPosition.y, &(spriteClips[privCurrentSprite]), width, height);
+	gridsprite.render(protecRendPos.x, protecRendPos.y, &(spriteClips[privCurrentSprite]), BUTTON_WIDTH, BUTTON_HEIGHT);
 }

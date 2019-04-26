@@ -142,6 +142,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Button.cpp" />
     <ClCompile Include="GridSquare.cpp" />
     <ClCompile Include="GameWindow.cpp" />
     <ClCompile Include="main.cpp" />
@@ -151,6 +152,7 @@
     <ClCompile Include="Viewport.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Button.h" />
     <ClInclude Include="GridSquare.h" />
     <ClInclude Include="GameWindow.h" />
     <ClInclude Include="Renderable.h" />

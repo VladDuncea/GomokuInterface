@@ -8,15 +8,21 @@
 #include <windows.h>
 #include "TextBox.h"
 
-constexpr auto SCALING = 1.7;
-
+constexpr auto SCALING = 0.9;
 constexpr auto GRID_WIDTH = 20;
 constexpr auto GRID_HEIGHT = 23;
+constexpr auto SQUARE_SPRITE_SIZE = 400;
 const int SQUARE_WIDTH = 30 * SCALING;
 const int SQUARE_HEIGHT = SQUARE_WIDTH;
-const int MENU_WIDTH = 400 * SCALING;
+const int MENU_WIDTH = 500 * SCALING;
 constexpr auto TOTAL_BUTTONS = GRID_HEIGHT * GRID_WIDTH;
 constexpr auto FONT = "timesbd.ttf";
+
+//Global fonts
+TTF_Font* fontLarge = NULL;
+TTF_Font* fontBig = NULL;
+TTF_Font* fontNormal = NULL;
+
 
 enum TextBoxes
 {
@@ -55,6 +61,19 @@ enum StartStrategy
 	STRATEGY_SWAP = 1,
 	STRATEGY_SWAP2 = 2
 };
+
+void loadFonts()
+{
+	//Load font
+	fontLarge = TTF_OpenFont(FONT, 50 * SCALING);
+	fontBig = TTF_OpenFont(FONT, 30 * SCALING);
+	fontNormal = TTF_OpenFont(FONT, 25 * SCALING);
+	if (fontBig == NULL || fontNormal == NULL || fontLarge == NULL)
+	{
+		printf("Failed to load font! SDL_ttf Error: %s\n", TTF_GetError());
+		exit(-1);	//TODO throw error
+	}
+}
 
 bool checkForWin(int x, int y, std::vector<GridSquare> &gs,int squareId)
 {
@@ -123,32 +142,19 @@ bool initTextBoxes(GameWindow &gw, std::vector<TextBox*> & textBoxVect,Viewport 
 	//Usefull variables
 	int middleOfViewport = menuViewport.height() / 2;
 
-	//Load font
-	TTF_Font* fontLarge = NULL;
-	TTF_Font* fontBig = NULL;
-	TTF_Font* fontNormal = NULL;
-	fontLarge = TTF_OpenFont(FONT, 40 * SCALING);
-	fontBig = TTF_OpenFont(FONT, 20 * SCALING);
-	fontNormal = TTF_OpenFont(FONT, 16 * SCALING);
-	if (fontBig == NULL || fontNormal == NULL)
-	{
-		printf("Failed to load font! SDL_ttf Error: %s\n", TTF_GetError());
-		exit(-1);
-	}
-
 	//Static text
 		//Title
-	TextBox* textTitle = new TextBox(gw, "Gomoku Interface", fontLarge, { 214, 118, 40 }); //TODO error checking
+	TextBox* textTitle = new TextBox(menuViewport, "Gomoku Interface", fontLarge, { 214, 118, 40 }); //TODO error checking
 	textTitle->setRendCentered(true);
 	textTitle->setRenderPos(menuViewport.width() / 2, menuViewport.height() / 100 + textTitle->getHeight() / 2);
 	textBoxVect.push_back(textTitle);
 		//Player text
-	TextBox* textPlayerOne = new TextBox(gw,"Player one",fontNormal);
+	TextBox* textPlayerOne = new TextBox(menuViewport,"Player one",fontNormal);
 	int OneX = menuViewport.width() / 10 + textPlayerOne->getWidth() / 2;
 	textPlayerOne->setRendCentered(true);
 	textPlayerOne->setRenderPos(OneX, middleOfViewport);
 	textBoxVect.push_back(textPlayerOne);
-	TextBox* textPlayerTwo = new TextBox(gw,"Player two",fontNormal);
+	TextBox* textPlayerTwo = new TextBox(menuViewport,"Player two",fontNormal);
 	int TwoX = menuViewport.width() - textPlayerTwo->getWidth() / 2 - menuViewport.width() / 10;
 	textPlayerTwo->setRendCentered(true);
 	textPlayerTwo->setRenderPos(TwoX, middleOfViewport);
@@ -156,54 +162,59 @@ bool initTextBoxes(GameWindow &gw, std::vector<TextBox*> & textBoxVect,Viewport 
 
 	//Changing text
 		//Player score
-	TextBox* textPlayerOneScore = new TextBox(gw,"0",fontNormal);
+	TextBox* textPlayerOneScore = new TextBox(menuViewport,"0",fontNormal);
 	textPlayerOneScore->setRendCentered(true);
 	textPlayerOneScore->setRenderPos(OneX, textPlayerOne->getRenderPos().y + textPlayerOne->getHeight()*2);
 	textBoxVect.push_back(textPlayerOneScore);
-	TextBox* textPlayerTwoScore = new TextBox(gw, "0",fontNormal);
+	TextBox* textPlayerTwoScore = new TextBox(menuViewport, "0",fontNormal);
 	textPlayerTwoScore->setRendCentered(true);
 	textPlayerTwoScore->setRenderPos(TwoX, textPlayerTwo->getRenderPos().y + textPlayerOne->getHeight() * 2);
 	textBoxVect.push_back(textPlayerTwoScore);
 
 		//Text messages
 	//Win message
-	TextBox* textWinMessage = new TextBox(gw,"placeholder",fontBig);
+	TextBox* textWinMessage = new TextBox(menuViewport,"placeholder",fontBig);
 	textWinMessage->setRendCentered(true);
 	textWinMessage->setRenderPos(menuViewport.width() / 2, menuViewport.height() / 3);
 	textWinMessage->setRendEnabled(false);
 	textBoxVect.push_back(textWinMessage);
 	//Continue message
-	TextBox* textContinueMessage = new TextBox(gw, "Press 'R' to start another game", fontNormal);
+	TextBox* textContinueMessage = new TextBox(menuViewport, "Press 'R' to start another game", fontNormal);
 	textContinueMessage->setRendCentered(true);
 	textContinueMessage->setRenderPos(menuViewport.width() / 2, menuViewport.height() / 3 + textWinMessage->getHeight());
 	textContinueMessage->setRendEnabled(false);
 	textBoxVect.push_back(textContinueMessage);
 	//Piece counter
-	TextBox* textPieceNum = new TextBox(gw, "Piece : 1",fontNormal);
+	TextBox* textPieceNum = new TextBox(menuViewport, "Piece : 1",fontNormal);
 	textPieceNum->setRenderPos(menuViewport.width() / 10, menuViewport.height() / 25 + textTitle->getHeight());
 	textPieceNum->setRendEnabled(false);
 	textBoxVect.push_back(textPieceNum);
 	//Player turn indicator
-	TextBox* textPlayerTurn = new TextBox(gw, "placeholder",fontNormal);
+	TextBox* textPlayerTurn = new TextBox(menuViewport, "placeholder",fontNormal);
 	textPlayerTurn->setRendCentered(true);
 	textPlayerTurn->setRenderPos(menuViewport.width() / 2, middleOfViewport - textPlayerTurn->getHeight() * 2);
 	textBoxVect.push_back(textPlayerTurn);
 	//Strategy choices
-	TextBox* textStrategyChoice = new TextBox(gw,"placeholder",fontNormal);
+	TextBox* textStrategyChoice = new TextBox(menuViewport,"placeholder",fontNormal);
 	textStrategyChoice->setRendCentered(true);
 	textStrategyChoice->setRenderPos(menuViewport.width() / 2, middleOfViewport - textPlayerTurn->getHeight() * 4);
 	textStrategyChoice->setRendEnabled(false);
 	textBoxVect.push_back(textStrategyChoice);
 	//Initial starting strategy text
-	TextBox* textStartingStrategy = new TextBox(gw, "Please choose a starting strategy !",fontNormal);
+	TextBox* textStartingStrategy = new TextBox(menuViewport, "Please choose a starting strategy !",fontNormal);
 	textStartingStrategy->setRendCentered(true);
 	textStartingStrategy->setRenderPos(menuViewport.width() / 2, menuViewport.height() / 50 + textTitle->getHeight());
 	textBoxVect.push_back(textStartingStrategy);
 	//Strategy options
-	TextBox* textStartingStrategyOptions = new TextBox(gw, "1 - SWAP || 2 - SWAP2",fontNormal);
+	TextBox* textStartingStrategyOptions = new TextBox(menuViewport, "1 - SWAP || 2 - SWAP2",fontNormal);
 	textStartingStrategyOptions->setRendCentered(true);
 	textStartingStrategyOptions->setRenderPos(menuViewport.width() / 2, textStartingStrategy->getRenderPos().y +textStartingStrategy->getHeight()*2);
 	textBoxVect.push_back(textStartingStrategyOptions);
+	return true;
+}
+
+bool initButtons(GameWindow& gw, std::vector<TextBox*>& textBoxVect, Viewport& menuViewport)
+{
 	return true;
 }
 
@@ -212,6 +223,9 @@ int main(int argc, char* args[])
 	//Start up SDL and create game window
 	GameWindow gw(GRID_WIDTH*SQUARE_WIDTH + MENU_WIDTH, GRID_HEIGHT*SQUARE_HEIGHT);
 
+	//Initialise fonts
+	loadFonts();
+
 	//Create the 2 viewports (game grid + menu)
 	Viewport gameViewport(gw, 0, 0, GRID_WIDTH * SQUARE_WIDTH, gw.height());
 	Viewport menuViewport(gw, GRID_WIDTH*SQUARE_WIDTH, 0, MENU_WIDTH, gw.height());
@@ -219,7 +233,7 @@ int main(int argc, char* args[])
 	//Load assets
 
 		//Square sprites
-	Texture SquareSpriteSheet(gw);
+	Texture SquareSpriteSheet(gameViewport);
 	try
 	{
 		SquareSpriteSheet.loadFromFile("GomokuPieces.png");
@@ -245,9 +259,9 @@ int main(int argc, char* args[])
 	for (int i = 0; i < SQUARE_SPRITE_TOTAL; ++i)
 	{
 		spriteClips[i].x = 0;
-		spriteClips[i].y = i * 400;
-		spriteClips[i].w = 400;
-		spriteClips[i].h = 400;
+		spriteClips[i].y = i * SQUARE_SPRITE_SIZE;
+		spriteClips[i].w = SQUARE_SPRITE_SIZE;
+		spriteClips[i].h = SQUARE_SPRITE_SIZE;
 	}
 
 	//All the squares in the grid
@@ -258,13 +272,11 @@ int main(int argc, char* args[])
 	{
 		for (int j = 0; j < GRID_WIDTH; j++)
 		{
-			gs.setPosition(gs.width()*j, gs.height()*i);
+			gs.setRenderPos(SQUARE_WIDTH*j, SQUARE_HEIGHT*i);
 			gridSquares.push_back(gs);
 		}
 	}
-	//
 	//Game variables
-	//
 
 	//Event handler
 	SDL_Event e;
@@ -290,8 +302,7 @@ int main(int argc, char* args[])
 
 	//While application is running
 	while (!quit)
-	{
-		
+	{	
 		//Handle events on queue
 		while (SDL_PollEvent(&e) != 0)
 		{
@@ -301,7 +312,7 @@ int main(int argc, char* args[])
 				quit = true;
 			}
 
-			//Check for key-presses
+			//Key-presses handling
 			if (e.type == SDL_KEYDOWN)
 			{
 				switch (e.key.keysym.sym)
@@ -374,7 +385,6 @@ int main(int argc, char* args[])
 			//If mouse event happened and the game is not over and a starting strategy is set
 			if ( !hasStratToChose && !win&& startStrat!=STRATEGY_NOT_SET && (e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN))
 			{
-
 				//Get mouse position
 				int x, y;
 				//Get mouse
@@ -487,9 +497,9 @@ int main(int argc, char* args[])
 
 			//Render the grid
 			gw.setViewport(gameViewport.viewportRect());
-			for (int i = 0; i < GRID_HEIGHT*GRID_WIDTH; i++)
+			for (auto gs:gridSquares)
 			{
-				gridSquares[i].render(gameViewport.width() / GRID_WIDTH, gameViewport.height() / GRID_HEIGHT);
+				gs.render();
 			}
 
 			//Render the menu
@@ -505,13 +515,14 @@ int main(int argc, char* args[])
 			for (auto t : textBoxVect)
 				t->render();
 
-			//Render everything
+			//Render everything else
 			for (auto r : rendVect)
 				r->render();
 
 			//Render window
-			gw.update();
+			
 		}
+		gw.update();
 	}
 
 	return 0;

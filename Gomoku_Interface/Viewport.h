@@ -13,5 +13,6 @@ public:
 	int height() const;
 	int width() const;
 	SDL_Rect& viewportRect();
+	GameWindow& gameWindow() const;
 };
 

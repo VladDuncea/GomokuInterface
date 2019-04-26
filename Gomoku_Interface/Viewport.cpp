@@ -31,3 +31,8 @@ SDL_Rect& Viewport::viewportRect()
 {
 	return privRect;
 }
+
+GameWindow& Viewport::gameWindow() const
+{
+	return privGameWindow;
+}

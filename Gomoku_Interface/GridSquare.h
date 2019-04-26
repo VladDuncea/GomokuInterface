@@ -5,9 +5,10 @@
 #include <string>
 #include "Viewport.h"
 #include "Texture.h"
+#include "Renderable.h"
 
 //The mouse button
-class GridSquare
+class GridSquare :public Renderable
 {
 
 	//Button constants
@@ -17,9 +18,6 @@ class GridSquare
 
 	//Lock the square once it is chosen
 	bool privLocked;
-
-	//Top left position
-	SDL_Point privPosition;
 
 	//Currently used sprite
 	int privCurrentSprite;
@@ -35,10 +33,7 @@ class GridSquare
 
 public:
 	//Initializes internal variables
-	GridSquare(Viewport& viewp,const int buttonHeight,const int buttonWidth,const int nrStates,Texture &spriteSheet, SDL_Rect *spriteClips);
-
-	//Sets top left position
-	void setPosition(int x, int y);
+	GridSquare(Viewport& viewp,const int squareHeight,const int squareWidth,const int nrStates,Texture &spriteSheet, SDL_Rect *spriteClips);
 
 	int width();
 	int height();
@@ -53,8 +48,7 @@ public:
 
 	bool locked();
 
-	//Shows button sprite
-	void render(int width,int height);
+	void render();
 
 
 };

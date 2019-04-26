@@ -1,12 +1,11 @@
 #include "Texture.h"
 
-Texture::Texture(const GameWindow &gw) : gameWindow(gw)
+Texture::Texture(const Viewport &viewport) : privViewport(viewport)
 {
 	//Initialize
 	privTexture = NULL;
 	privWidth = 0;
 	privHeight = 0;
-
 }
 
 Texture::~Texture()
@@ -39,7 +38,7 @@ bool Texture::loadFromFile(std::string path)
 		//SDL_BlitScaled(gStretchedSurface, NULL, gScreenSurface, &stretchRect);
 
 		//Create texture from surface pixels
-		newTexture = SDL_CreateTextureFromSurface(gameWindow.renderer(), loadedSurface);
+		newTexture = SDL_CreateTextureFromSurface(privViewport.gameWindow().renderer(), loadedSurface);
 		if (newTexture == NULL)
 		{
 			printf("Unable to create texture from %s! SDL Error: %s\n", path.c_str(), SDL_GetError());
@@ -74,7 +73,7 @@ bool Texture::loadFromRenderedText(std::string textureText,TTF_Font *font, const
 	else
 	{
 		//Create texture from surface pixels
-		privTexture = SDL_CreateTextureFromSurface(gameWindow.renderer(), textSurface);
+		privTexture = SDL_CreateTextureFromSurface(privViewport.gameWindow().renderer(), textSurface);
 		if (privTexture == NULL)
 		{
 			printf("Unable to create texture from rendered text! SDL Error: %s\n", SDL_GetError());
@@ -137,7 +136,7 @@ void Texture::render(int x, int y, SDL_Rect* clip,int width,int height)
 	}
 
 	//Render to screen
-	SDL_RenderCopyEx(gameWindow.renderer(), privTexture, clip, &renderQuad, 0.0, NULL, SDL_FLIP_NONE);
+	SDL_RenderCopyEx(privViewport.gameWindow().renderer(), privTexture, clip, &renderQuad, 0.0, NULL, SDL_FLIP_NONE);
 }
 
 void Texture::renderCentered(int x, int y)

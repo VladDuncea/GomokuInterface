@@ -4,23 +4,22 @@
 #include <stdio.h>
 #include <string>
 #include "GameWindow.h"
+#include"Viewport.h"
 //Texture wrapper class
 class Texture
 {
-
-private:
 	//The actual hardware texture
 	SDL_Texture* privTexture;
 
 	//Image dimensions
 	int privWidth;
 	int privHeight;
-	const GameWindow & gameWindow;
+	const Viewport & privViewport;
 
 
 public:
 	//Initializes variables
-	Texture(const GameWindow &gw);
+	Texture(const Viewport &gw);
 
 	//Deallocates memory
 	~Texture();
