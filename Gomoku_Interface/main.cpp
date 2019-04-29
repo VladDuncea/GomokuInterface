@@ -7,15 +7,24 @@
 #include <string>
 #include <windows.h>
 #include "TextBox.h"
+#include "Button.h"
 
 constexpr auto SCALING = 0.9;
-constexpr auto GRID_WIDTH = 20;
+//Grid variables
+constexpr auto GRID_WIDTH = 1;
 constexpr auto GRID_HEIGHT = 23;
+//Square variables
 constexpr auto SQUARE_SPRITE_SIZE = 400;
-const int SQUARE_WIDTH = 30 * SCALING;
+const int SQUARE_WIDTH =(int) (30 * SCALING);
 const int SQUARE_HEIGHT = SQUARE_WIDTH;
-const int MENU_WIDTH = 500 * SCALING;
-constexpr auto TOTAL_BUTTONS = GRID_HEIGHT * GRID_WIDTH;
+//Button variables
+constexpr auto BUTTON_SPRITE_SIZE_W = 400;
+constexpr auto BUTTON_SPRITE_SIZE_H = 200;
+const int BUTTON_SIZE_W = (int) (120 * SCALING);
+const int BUTTON_SIZE_H = (int) (60 * SCALING);
+//Menu variables
+const int MENU_WIDTH = (int) (500 * SCALING);
+constexpr auto TOTAL_SQUARES = GRID_HEIGHT * GRID_WIDTH;
 constexpr auto FONT = "timesbd.ttf";
 
 //Global fonts
@@ -23,6 +32,9 @@ TTF_Font* fontLarge = NULL;
 TTF_Font* fontBig = NULL;
 TTF_Font* fontNormal = NULL;
 
+//Global textures
+Texture * buttonSpriteSheet;
+Texture * SquareSpriteSheet;
 
 enum TextBoxes
 {
@@ -38,6 +50,12 @@ enum TextBoxes
 	TEXTBOX_STRAT_CHOICE,
 	TEXTBOX_STRAT_START,
 	TEXTBOX_STRAT_OPT
+};
+
+enum Buttons
+{
+	BUTTON_DRAW_1 =0,
+	BUTTON_DRAW_2
 };
 
 enum SquareSprite
@@ -65,14 +83,44 @@ enum StartStrategy
 void loadFonts()
 {
 	//Load font
-	fontLarge = TTF_OpenFont(FONT, 50 * SCALING);
-	fontBig = TTF_OpenFont(FONT, 30 * SCALING);
-	fontNormal = TTF_OpenFont(FONT, 25 * SCALING);
+	fontLarge = TTF_OpenFont(FONT,(int) ( 50 * SCALING));
+	fontBig = TTF_OpenFont(FONT,(int) (30 * SCALING));
+	fontNormal = TTF_OpenFont(FONT,(int) (25 * SCALING));
 	if (fontBig == NULL || fontNormal == NULL || fontLarge == NULL)
 	{
 		printf("Failed to load font! SDL_ttf Error: %s\n", TTF_GetError());
 		exit(-1);	//TODO throw error
 	}
+}
+
+void loadTextures(GameWindow & gw)
+{
+	//Square sprites
+	SquareSpriteSheet = new Texture(gw);
+	try
+	{
+		SquareSpriteSheet->loadFromFile("GomokuPieces.png");
+	}
+	catch (int e)
+	{
+		printf("Failed to load square sprite texture!\n");
+		exit(-1);
+	}
+
+
+	//Button sprites
+	buttonSpriteSheet = new Texture(gw);
+	try
+	{
+		buttonSpriteSheet->loadFromFile("GomokuButtons.png");
+	}
+	catch (int e)
+	{
+		printf("Failed to load square sprite texture!\n");
+		exit(-1);
+	}
+
+
 }
 
 bool checkForWin(int x, int y, std::vector<GridSquare> &gs,int squareId)
@@ -115,10 +163,10 @@ bool checkForWin(int x, int y, std::vector<GridSquare> &gs,int squareId)
 
 	//Check right to left diagonally
 	piecesCount = 1;
-	while (	++cx >= 0 && --cy >= 0 && gs[cy*GRID_WIDTH + cx].getSprite() == squareId)
+	while (	++cx <GRID_WIDTH && --cy >= 0 && gs[cy*GRID_WIDTH + cx].getSprite() == squareId)
 		piecesCount++;
 	cx = x; cy = y;
-	while ( --cx < GRID_WIDTH && ++cy < GRID_HEIGHT && gs[cy*GRID_WIDTH + cx].getSprite() == squareId)
+	while ( --cx >=0 && ++cy < GRID_HEIGHT && gs[cy*GRID_WIDTH + cx].getSprite() == squareId)
 		piecesCount++;
 	cx = x; cy = y;
 	if (piecesCount >= 5)
@@ -213,15 +261,67 @@ bool initTextBoxes(GameWindow &gw, std::vector<TextBox*> & textBoxVect,Viewport 
 	return true;
 }
 
-bool initButtons(GameWindow& gw, std::vector<TextBox*>& textBoxVect, Viewport& menuViewport)
+bool initButtons(Viewport& menuViewport, std::vector<Button*>& buttonVect)
 {
+	//The clips from the sprite sheet
+	SDL_Rect buttonSpriteClips[BUTTON_TOTAL_STATES];
+	//Select sprites in sprite sheet
+	for (int i = 0; i < BUTTON_TOTAL_STATES; i++)
+	{
+		buttonSpriteClips[i].x = 0;
+		buttonSpriteClips[i].y = i * BUTTON_SPRITE_SIZE_H;
+		buttonSpriteClips[i].w = BUTTON_SPRITE_SIZE_W;
+		buttonSpriteClips[i].h = BUTTON_SPRITE_SIZE_H;
+	}
+
+	//Draw buttons
+	Button * buttonDraw1 = new Button(menuViewport, BUTTON_SIZE_H, BUTTON_SIZE_W, buttonSpriteSheet, buttonSpriteClips, fontNormal, "Draw");
+	int OneX = menuViewport.width() / 10 + BUTTON_SIZE_W / 2;
+	buttonDraw1->setRendCentered(true);
+	buttonDraw1->setToggle(true);
+	buttonDraw1->setRenderPos(OneX, menuViewport.height() * 0.9);
+	buttonVect.push_back(buttonDraw1);
+	Button * buttonDraw2 = new Button(menuViewport, BUTTON_SIZE_H, BUTTON_SIZE_W, buttonSpriteSheet, buttonSpriteClips, fontNormal, "Draw");
+	int TwoX = menuViewport.width()*0.9 - BUTTON_SIZE_W / 2;
+	buttonDraw2->setRendCentered(true);
+	buttonDraw2->setToggle(true);
+	buttonDraw2->setRenderPos(TwoX, menuViewport.height()* 0.9);
+	buttonVect.push_back(buttonDraw2);
 	return true;
+}
+
+void hideUI(std::vector<TextBox*> & textBoxVect, std::vector<Button*>& buttonVect)
+{
+	textBoxVect[TEXTBOX_PTURN]->setRendEnabled(false);
+	buttonVect[BUTTON_DRAW_1]->setRendEnabled(false);
+	buttonVect[BUTTON_DRAW_2]->setRendEnabled(false);
+	buttonVect[BUTTON_DRAW_2]->unToggle();
+}
+
+void showUI(std::vector<TextBox*> & textBoxVect, std::vector<Button*>& buttonVect)
+{
+	textBoxVect[TEXTBOX_PTURN]->setRendEnabled(true);
+	buttonVect[BUTTON_DRAW_1]->setRendEnabled(true);
+	buttonVect[BUTTON_DRAW_2]->setRendEnabled(true);
+}
+
+void draw(std::vector<TextBox*> & textBoxVect, std::vector<Button*>& buttonVect)
+{
+	hideUI(textBoxVect, buttonVect);
+	//Display draw
+	textBoxVect[TEXTBOX_WINMSG]->chageText("Draw !");
+	textBoxVect[TEXTBOX_WINMSG]->setRendEnabled(true);
+	//Show info to continue game
+	textBoxVect[TEXTBOX_CONTMSG]->setRendEnabled(true);
 }
 
 int main(int argc, char* args[])
 {
 	//Start up SDL and create game window
 	GameWindow gw(GRID_WIDTH*SQUARE_WIDTH + MENU_WIDTH, GRID_HEIGHT*SQUARE_HEIGHT);
+
+	//Load textures
+	loadTextures(gw);
 
 	//Initialise fonts
 	loadFonts();
@@ -232,18 +332,6 @@ int main(int argc, char* args[])
 
 	//Load assets
 
-		//Square sprites
-	Texture SquareSpriteSheet(gameViewport);
-	try
-	{
-		SquareSpriteSheet.loadFromFile("GomokuPieces.png");
-	}
-	catch (int e)
-	{
-		printf("Failed to load square sprite texture!\n");
-		exit(-1);
-	}
-
 	//Store all the renderable objects
 	std::vector<Renderable*> rendVect;
 
@@ -253,21 +341,20 @@ int main(int argc, char* args[])
 	initTextBoxes(gw, textBoxVect, menuViewport);
 
 	//The clips from the sprite sheet
-	SDL_Rect spriteClips[SQUARE_SPRITE_TOTAL];
-	
+	SDL_Rect squareSpriteClips[SQUARE_SPRITE_TOTAL];
 	//Select sprites in sprite sheet
 	for (int i = 0; i < SQUARE_SPRITE_TOTAL; ++i)
 	{
-		spriteClips[i].x = 0;
-		spriteClips[i].y = i * SQUARE_SPRITE_SIZE;
-		spriteClips[i].w = SQUARE_SPRITE_SIZE;
-		spriteClips[i].h = SQUARE_SPRITE_SIZE;
+		squareSpriteClips[i].x = 0;
+		squareSpriteClips[i].y = i * SQUARE_SPRITE_SIZE;
+		squareSpriteClips[i].w = SQUARE_SPRITE_SIZE;
+		squareSpriteClips[i].h = SQUARE_SPRITE_SIZE;
 	}
 
 	//All the squares in the grid
 	std::vector<GridSquare> gridSquares;
 	//Set the squares to coresponding positions to create the grid
-	GridSquare gs(gameViewport, gameViewport.height() / GRID_HEIGHT, gameViewport.width() / GRID_WIDTH, SQUARE_SPRITE_TOTAL, SquareSpriteSheet,spriteClips);
+	GridSquare gs(gameViewport, gameViewport.height() / GRID_HEIGHT, gameViewport.width() / GRID_WIDTH, SQUARE_SPRITE_TOTAL, *SquareSpriteSheet,squareSpriteClips);
 	for (int i = 0; i < GRID_HEIGHT; i++)
 	{
 		for (int j = 0; j < GRID_WIDTH; j++)
@@ -276,6 +363,15 @@ int main(int argc, char* args[])
 			gridSquares.push_back(gs);
 		}
 	}
+
+	//Button initialisation
+	//Button sprites
+	
+	//All the buttons
+	std::vector<Button*> buttonVect;
+	//Initialise them
+	initButtons(menuViewport, buttonVect);
+
 	//Game variables
 
 	//Event handler
@@ -320,14 +416,21 @@ int main(int argc, char* args[])
 				case SDLK_r:
 					if (win)
 					{
+						//Show ui
+						showUI(textBoxVect, buttonVect);
+						//Hide continue messages
 						textBoxVect[TEXTBOX_WINMSG]->setRendEnabled(false);
 						textBoxVect[TEXTBOX_CONTMSG]->setRendEnabled(false);
+						//Reset variables
 						win = false;
 						turnNr = 0;
 						swap2choice3 = false;
 						hasStratToChose = false;
-						(textBoxVect[TEXTBOX_PIECENUM])->chageText("Piece: 1");
+						textBoxVect[TEXTBOX_PIECENUM]->chageText("Piece: 1");
 						resetSquares(gridSquares);
+						//Reset draw buttons
+						buttonVect[BUTTON_DRAW_1]->unToggle();
+						buttonVect[BUTTON_DRAW_2]->unToggle();
 					}
 					break;
 				case SDLK_1:
@@ -381,9 +484,8 @@ int main(int argc, char* args[])
 			}
 			//Clear window
 			gw.clear();
-
 			//If mouse event happened and the game is not over and a starting strategy is set
-			if ( !hasStratToChose && !win&& startStrat!=STRATEGY_NOT_SET && (e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN))
+			if ( !hasStratToChose && !win&& startStrat!=STRATEGY_NOT_SET && (e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN || e.type==SDL_MOUSEBUTTONUP))
 			{
 				//Get mouse position
 				int x, y;
@@ -398,8 +500,6 @@ int main(int argc, char* args[])
 				else
 					SDL_GetMouseState(&x, &y);
 
-				//printf("x: %d y:%d\n", x, y);
-
 				//Set all unlocked grid squares to empty
 				for (int i = 0; i < GRID_HEIGHT*GRID_WIDTH; i++)
 				{
@@ -413,8 +513,6 @@ int main(int argc, char* args[])
 					x /= gridSquares[0].width();
 					y /= gridSquares[0].height();
 					int squareNr = y * GRID_WIDTH + x;
-
-
 
 					//Account for possible out of bounds
 					if (squareNr <= GRID_HEIGHT*GRID_WIDTH)
@@ -436,12 +534,13 @@ int main(int argc, char* args[])
 
 								if (win)
 								{
+									hideUI(textBoxVect, buttonVect);
 									std::cout << "Player won";
 									if (playerTurn == PLAYER_ONE)
 									{
 										playerBlackScore++;
-										(textBoxVect[TEXTBOX_PONE_SCORE])->chageText(std::to_string(playerBlackScore).c_str());
-										(textBoxVect[TEXTBOX_WINMSG])->chageText("Player One won!");
+										textBoxVect[TEXTBOX_PONE_SCORE]->chageText(std::to_string(playerBlackScore).c_str());
+										textBoxVect[TEXTBOX_WINMSG]->chageText("Player One won!");
 									}
 									else
 									{
@@ -456,14 +555,26 @@ int main(int argc, char* args[])
 								{
 									//If the current player did not win advance game
 									turnNr++;
-									if (turnNr > 2 && (!swap2choice3 || turnNr > 4))
+
+									//Check if board is full
+									if (turnNr >= TOTAL_SQUARES)
 									{
-										playerTurn = playerTurn == PLAYER_ONE ? PLAYER_TWO : PLAYER_ONE;
+										draw(textBoxVect,buttonVect);
+										win = true;
 									}
+
+									//Display piece nr
 									std::string text("Piece : ");
 									text += std::to_string(turnNr + 1);
 									(textBoxVect[TEXTBOX_PIECENUM])->chageText(text.c_str());
 
+									//Advance turn if conditions are met
+									if (turnNr > 2 && (!swap2choice3 || turnNr > 4))
+									{
+										playerTurn = playerTurn == PLAYER_ONE ? PLAYER_TWO : PLAYER_ONE;
+									}
+									
+									//Start of turn 4 choices
 									if (turnNr == 3)
 									{
 										if (startStrat == STRATEGY_SWAP)
@@ -473,25 +584,39 @@ int main(int argc, char* args[])
 										textBoxVect[TEXTBOX_STRAT_CHOICE]->setRendEnabled(true);
 										hasStratToChose = true;
 									}
+									//Start of turn 6 choices
 									else if (turnNr == 5 && swap2choice3)
 									{
 										hasStratToChose = true;
 										textBoxVect[TEXTBOX_STRAT_CHOICE]->chageText("Choose: 1-nothing || 2-swap");
 										textBoxVect[TEXTBOX_STRAT_CHOICE]->setRendEnabled(true);
 									}
-
-									
 								}
 
 							}
 						}
 					}
 				}
-
 				//Inside menu area
 				else
 				{
+					for (auto b : buttonVect)
+					{
+						b->handleMouse(e);
+					}
 
+					//Check for draw
+					if (buttonVect[BUTTON_DRAW_1]->isClicked() && buttonVect[BUTTON_DRAW_2]->isClicked())
+					{
+						draw(textBoxVect,buttonVect);
+						win = true;
+					}
+					/*
+					SDL_Event sdlevent = {};
+					sdlevent.type = SDL_KEYDOWN;
+					sdlevent.key.keysym.sym = SDLK_LEFT;
+					SDL_PushEvent(&sdlevent);
+					*/
 				}
 			}
 
@@ -518,6 +643,9 @@ int main(int argc, char* args[])
 			//Render everything else
 			for (auto r : rendVect)
 				r->render();
+
+			for (auto b : buttonVect)
+				b->render();
 
 			//Render window
 			

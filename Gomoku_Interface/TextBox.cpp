@@ -1,7 +1,7 @@
 #include "TextBox.h"
 
 
-TextBox::TextBox(const Viewport &viewport, const char * c, TTF_Font * font, SDL_Color color): privTextTexture(viewport)
+TextBox::TextBox(const Viewport &viewport, const char * c, TTF_Font * font, SDL_Color color): privTextTexture(viewport.gameWindow())
 {
 	privColor = color;
 	privFont = font;

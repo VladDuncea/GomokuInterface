@@ -11,15 +11,15 @@ class Texture
 	//The actual hardware texture
 	SDL_Texture* privTexture;
 
+	const GameWindow & privGameWindow;
+
 	//Image dimensions
 	int privWidth;
 	int privHeight;
-	const Viewport & privViewport;
-
 
 public:
 	//Initializes variables
-	Texture(const Viewport &gw);
+	Texture(const GameWindow &gw);
 
 	//Deallocates memory
 	~Texture();
@@ -45,7 +45,7 @@ public:
 	//Renders texture at given point
 	void render(int x, int y, SDL_Rect* clip = NULL,int width=0,int height=0);
 
-	void renderCentered(int x, int y);
+	void renderCentered(int x, int y, SDL_Rect* clip = NULL, int width = 0, int height = 0);
 
 	//Gets image dimensions
 	int getWidth();

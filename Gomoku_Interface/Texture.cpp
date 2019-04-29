@@ -1,6 +1,6 @@
 #include "Texture.h"
 
-Texture::Texture(const Viewport &viewport) : privViewport(viewport)
+Texture::Texture(const GameWindow &gw) : privGameWindow(gw)
 {
 	//Initialize
 	privTexture = NULL;
@@ -38,7 +38,7 @@ bool Texture::loadFromFile(std::string path)
 		//SDL_BlitScaled(gStretchedSurface, NULL, gScreenSurface, &stretchRect);
 
 		//Create texture from surface pixels
-		newTexture = SDL_CreateTextureFromSurface(privViewport.gameWindow().renderer(), loadedSurface);
+		newTexture = SDL_CreateTextureFromSurface(privGameWindow.renderer(), loadedSurface);
 		if (newTexture == NULL)
 		{
 			printf("Unable to create texture from %s! SDL Error: %s\n", path.c_str(), SDL_GetError());
@@ -73,7 +73,7 @@ bool Texture::loadFromRenderedText(std::string textureText,TTF_Font *font, const
 	else
 	{
 		//Create texture from surface pixels
-		privTexture = SDL_CreateTextureFromSurface(privViewport.gameWindow().renderer(), textSurface);
+		privTexture = SDL_CreateTextureFromSurface(privGameWindow.renderer(), textSurface);
 		if (privTexture == NULL)
 		{
 			printf("Unable to create texture from rendered text! SDL Error: %s\n", SDL_GetError());
@@ -136,12 +136,16 @@ void Texture::render(int x, int y, SDL_Rect* clip,int width,int height)
 	}
 
 	//Render to screen
-	SDL_RenderCopyEx(privViewport.gameWindow().renderer(), privTexture, clip, &renderQuad, 0.0, NULL, SDL_FLIP_NONE);
+	SDL_RenderCopyEx(privGameWindow .renderer(), privTexture, clip, &renderQuad, 0.0, NULL, SDL_FLIP_NONE);
 }
 
-void Texture::renderCentered(int x, int y)
+void Texture::renderCentered(int x, int y, SDL_Rect* clip, int width, int height)
 {
-	render(x - privWidth / 2, y - privHeight / 2);
+	//Normal render but with coordonates as center of image
+	if(clip == NULL)
+		render(x - privWidth / 2, y - privHeight / 2,clip,width,height);
+	else
+		render(x - width / 2, y - height / 2, clip, width, height);
 }
 
 int Texture::getWidth()
