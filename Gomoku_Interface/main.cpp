@@ -11,7 +11,7 @@
 
 constexpr auto SCALING = 0.9;
 //Grid variables
-constexpr auto GRID_WIDTH = 1;
+constexpr auto GRID_WIDTH = 20;
 constexpr auto GRID_HEIGHT = 23;
 //Square variables
 constexpr auto SQUARE_SPRITE_SIZE = 400;
@@ -44,18 +44,22 @@ enum TextBoxes
 	TEXTBOX_PONE_SCORE,
 	TEXTBOX_PTWO_SCORE,
 	TEXTBOX_WINMSG,
-	TEXTBOX_CONTMSG,
 	TEXTBOX_PIECENUM,
 	TEXTBOX_PTURN,
 	TEXTBOX_STRAT_CHOICE,
-	TEXTBOX_STRAT_START,
-	TEXTBOX_STRAT_OPT
+	TEXTBOX_STRAT_START
 };
 
 enum Buttons
 {
 	BUTTON_DRAW_1 =0,
-	BUTTON_DRAW_2
+	BUTTON_DRAW_2,
+	BUTTON_STRATEGY_SWAP,
+	BUTTON_STRATEGY_SWAP2,
+	BUTTON_DO_NOTHING,
+	BUTTON_SWAP,
+	BUTTON_PLACE_TWO,
+	BUTTON_CONTINUE
 };
 
 enum SquareSprite
@@ -185,7 +189,22 @@ void resetSquares(std::vector<GridSquare> &gs)
 
 }
 
-bool initTextBoxes(GameWindow &gw, std::vector<TextBox*> & textBoxVect,Viewport &menuViewport)
+void hideUI(std::vector<TextBox*> & textBoxVect, std::vector<Button*>& buttonVect)
+{
+	textBoxVect[TEXTBOX_PTURN]->setRendEnabled(false);
+	buttonVect[BUTTON_DRAW_1]->setRendEnabled(false);
+	buttonVect[BUTTON_DRAW_2]->setRendEnabled(false);
+	buttonVect[BUTTON_DRAW_2]->unToggle();
+}
+
+void showUI(std::vector<TextBox*> & textBoxVect, std::vector<Button*>& buttonVect)
+{
+	textBoxVect[TEXTBOX_PTURN]->setRendEnabled(true);
+	buttonVect[BUTTON_DRAW_1]->setRendEnabled(true);
+	buttonVect[BUTTON_DRAW_2]->setRendEnabled(true);
+}
+
+bool initMenuUI(std::vector<TextBox*> & textBoxVect, std::vector<Button*>& buttonVect,Viewport &menuViewport)
 {
 	//Usefull variables
 	int middleOfViewport = menuViewport.height() / 2;
@@ -226,12 +245,6 @@ bool initTextBoxes(GameWindow &gw, std::vector<TextBox*> & textBoxVect,Viewport 
 	textWinMessage->setRenderPos(menuViewport.width() / 2, menuViewport.height() / 3);
 	textWinMessage->setRendEnabled(false);
 	textBoxVect.push_back(textWinMessage);
-	//Continue message
-	TextBox* textContinueMessage = new TextBox(menuViewport, "Press 'R' to start another game", fontNormal);
-	textContinueMessage->setRendCentered(true);
-	textContinueMessage->setRenderPos(menuViewport.width() / 2, menuViewport.height() / 3 + textWinMessage->getHeight());
-	textContinueMessage->setRendEnabled(false);
-	textBoxVect.push_back(textContinueMessage);
 	//Piece counter
 	TextBox* textPieceNum = new TextBox(menuViewport, "Piece : 1",fontNormal);
 	textPieceNum->setRenderPos(menuViewport.width() / 10, menuViewport.height() / 25 + textTitle->getHeight());
@@ -243,9 +256,9 @@ bool initTextBoxes(GameWindow &gw, std::vector<TextBox*> & textBoxVect,Viewport 
 	textPlayerTurn->setRenderPos(menuViewport.width() / 2, middleOfViewport - textPlayerTurn->getHeight() * 2);
 	textBoxVect.push_back(textPlayerTurn);
 	//Strategy choices
-	TextBox* textStrategyChoice = new TextBox(menuViewport,"placeholder",fontNormal);
+	TextBox* textStrategyChoice = new TextBox(menuViewport,"Choose an action",fontNormal);
 	textStrategyChoice->setRendCentered(true);
-	textStrategyChoice->setRenderPos(menuViewport.width() / 2, middleOfViewport - textPlayerTurn->getHeight() * 4);
+	textStrategyChoice->setRenderPos(menuViewport.width() / 2, textPieceNum->getRenderPos().y +textPieceNum->getHeight()*2);
 	textStrategyChoice->setRendEnabled(false);
 	textBoxVect.push_back(textStrategyChoice);
 	//Initial starting strategy text
@@ -253,16 +266,8 @@ bool initTextBoxes(GameWindow &gw, std::vector<TextBox*> & textBoxVect,Viewport 
 	textStartingStrategy->setRendCentered(true);
 	textStartingStrategy->setRenderPos(menuViewport.width() / 2, menuViewport.height() / 50 + textTitle->getHeight());
 	textBoxVect.push_back(textStartingStrategy);
-	//Strategy options
-	TextBox* textStartingStrategyOptions = new TextBox(menuViewport, "1 - SWAP || 2 - SWAP2",fontNormal);
-	textStartingStrategyOptions->setRendCentered(true);
-	textStartingStrategyOptions->setRenderPos(menuViewport.width() / 2, textStartingStrategy->getRenderPos().y +textStartingStrategy->getHeight()*2);
-	textBoxVect.push_back(textStartingStrategyOptions);
-	return true;
-}
 
-bool initButtons(Viewport& menuViewport, std::vector<Button*>& buttonVect)
-{
+	//Buttons
 	//The clips from the sprite sheet
 	SDL_Rect buttonSpriteClips[BUTTON_TOTAL_STATES];
 	//Select sprites in sprite sheet
@@ -276,33 +281,52 @@ bool initButtons(Viewport& menuViewport, std::vector<Button*>& buttonVect)
 
 	//Draw buttons
 	Button * buttonDraw1 = new Button(menuViewport, BUTTON_SIZE_H, BUTTON_SIZE_W, buttonSpriteSheet, buttonSpriteClips, fontNormal, "Draw");
-	int OneX = menuViewport.width() / 10 + BUTTON_SIZE_W / 2;
+	OneX = menuViewport.width() / 10 + BUTTON_SIZE_W / 2;
 	buttonDraw1->setRendCentered(true);
 	buttonDraw1->setToggle(true);
-	buttonDraw1->setRenderPos(OneX, menuViewport.height() * 0.9);
+	buttonDraw1->setRenderPos(OneX, (int)(menuViewport.height() * 0.9));
 	buttonVect.push_back(buttonDraw1);
 	Button * buttonDraw2 = new Button(menuViewport, BUTTON_SIZE_H, BUTTON_SIZE_W, buttonSpriteSheet, buttonSpriteClips, fontNormal, "Draw");
-	int TwoX = menuViewport.width()*0.9 - BUTTON_SIZE_W / 2;
+	TwoX = (int)(menuViewport.width()*0.9 - BUTTON_SIZE_W / 2);
 	buttonDraw2->setRendCentered(true);
 	buttonDraw2->setToggle(true);
-	buttonDraw2->setRenderPos(TwoX, menuViewport.height()* 0.9);
+	buttonDraw2->setRenderPos(TwoX,(int) (menuViewport.height()* 0.9));
 	buttonVect.push_back(buttonDraw2);
+
+	//Starting strategy buttons
+	Button * buttonSWAP = new Button(menuViewport, BUTTON_SIZE_H, BUTTON_SIZE_W, buttonSpriteSheet, buttonSpriteClips, fontNormal, "SWAP");
+	buttonSWAP->setRendCentered(true);
+	buttonSWAP->setRenderPos(OneX, textStartingStrategy->getRenderPos().y + textStartingStrategy->getHeight() * 2);
+	buttonVect.push_back(buttonSWAP);
+	Button * buttonSWAP2 = new Button(menuViewport, BUTTON_SIZE_H, BUTTON_SIZE_W, buttonSpriteSheet, buttonSpriteClips, fontNormal, "SWAP2");
+	buttonSWAP2->setRendCentered(true);
+	buttonSWAP2->setRenderPos(TwoX, textStartingStrategy->getRenderPos().y + textStartingStrategy->getHeight() * 2);
+	buttonVect.push_back(buttonSWAP2);
+	//Chosing strategy buttons
+	Button * buttonDoNothing = new Button(menuViewport, BUTTON_SIZE_H, BUTTON_SIZE_W, buttonSpriteSheet, buttonSpriteClips, fontNormal, "nothing");
+	buttonDoNothing->setRendCentered(true);
+	buttonDoNothing->setRendEnabled(false);
+	buttonDoNothing->setRenderPos(OneX, textStrategyChoice->getRenderPos().y + BUTTON_SIZE_H);
+	buttonVect.push_back(buttonDoNothing);
+	Button * buttonChoiceSWAP = new Button(menuViewport, BUTTON_SIZE_H, BUTTON_SIZE_W, buttonSpriteSheet, buttonSpriteClips, fontNormal, "swap");
+	buttonChoiceSWAP->setRendCentered(true);
+	buttonChoiceSWAP->setRendEnabled(false);
+	buttonChoiceSWAP->setRenderPos(menuViewport.width()/2, textStrategyChoice->getRenderPos().y + BUTTON_SIZE_H);
+	buttonVect.push_back(buttonChoiceSWAP);
+	Button * buttonPlace2 = new Button(menuViewport, BUTTON_SIZE_H, BUTTON_SIZE_W, buttonSpriteSheet, buttonSpriteClips, fontNormal, "place 2");
+	buttonPlace2->setRendCentered(true);
+	buttonPlace2->setRendEnabled(false);
+	buttonPlace2->setRenderPos(TwoX, textStrategyChoice->getRenderPos().y + BUTTON_SIZE_H);
+	buttonVect.push_back(buttonPlace2);
+	//Continue button
+	Button * buttonContinue = new Button(menuViewport, BUTTON_SIZE_H, BUTTON_SIZE_W, buttonSpriteSheet, buttonSpriteClips, fontNormal, "continue");
+	buttonContinue->setRendCentered(true);
+	buttonContinue->setRendEnabled(false);
+	buttonContinue->setRenderPos(menuViewport.width()/2, textWinMessage->getRenderPos().y +BUTTON_SIZE_H);
+	buttonVect.push_back(buttonContinue);
+	
+	hideUI(textBoxVect, buttonVect);
 	return true;
-}
-
-void hideUI(std::vector<TextBox*> & textBoxVect, std::vector<Button*>& buttonVect)
-{
-	textBoxVect[TEXTBOX_PTURN]->setRendEnabled(false);
-	buttonVect[BUTTON_DRAW_1]->setRendEnabled(false);
-	buttonVect[BUTTON_DRAW_2]->setRendEnabled(false);
-	buttonVect[BUTTON_DRAW_2]->unToggle();
-}
-
-void showUI(std::vector<TextBox*> & textBoxVect, std::vector<Button*>& buttonVect)
-{
-	textBoxVect[TEXTBOX_PTURN]->setRendEnabled(true);
-	buttonVect[BUTTON_DRAW_1]->setRendEnabled(true);
-	buttonVect[BUTTON_DRAW_2]->setRendEnabled(true);
 }
 
 void draw(std::vector<TextBox*> & textBoxVect, std::vector<Button*>& buttonVect)
@@ -312,7 +336,7 @@ void draw(std::vector<TextBox*> & textBoxVect, std::vector<Button*>& buttonVect)
 	textBoxVect[TEXTBOX_WINMSG]->chageText("Draw !");
 	textBoxVect[TEXTBOX_WINMSG]->setRendEnabled(true);
 	//Show info to continue game
-	textBoxVect[TEXTBOX_CONTMSG]->setRendEnabled(true);
+	buttonVect[BUTTON_CONTINUE]->setRendEnabled(true);
 }
 
 int main(int argc, char* args[])
@@ -334,11 +358,6 @@ int main(int argc, char* args[])
 
 	//Store all the renderable objects
 	std::vector<Renderable*> rendVect;
-
-	//Store all the text obj
-	std::vector<TextBox*> textBoxVect;
-	//Initialise them
-	initTextBoxes(gw, textBoxVect, menuViewport);
 
 	//The clips from the sprite sheet
 	SDL_Rect squareSpriteClips[SQUARE_SPRITE_TOTAL];
@@ -364,13 +383,15 @@ int main(int argc, char* args[])
 		}
 	}
 
-	//Button initialisation
-	//Button sprites
+	//UI initialisation
+	//Store all the text obj
+	std::vector<TextBox*> textBoxVect;
 	
 	//All the buttons
 	std::vector<Button*> buttonVect;
+
 	//Initialise them
-	initButtons(menuViewport, buttonVect);
+	initMenuUI(textBoxVect, buttonVect, menuViewport);
 
 	//Game variables
 
@@ -420,7 +441,7 @@ int main(int argc, char* args[])
 						showUI(textBoxVect, buttonVect);
 						//Hide continue messages
 						textBoxVect[TEXTBOX_WINMSG]->setRendEnabled(false);
-						textBoxVect[TEXTBOX_CONTMSG]->setRendEnabled(false);
+						buttonVect[BUTTON_CONTINUE]->setRendEnabled(false);
 						//Reset variables
 						win = false;
 						turnNr = 0;
@@ -439,13 +460,17 @@ int main(int argc, char* args[])
 						startStrat = STRATEGY_SWAP;
 						(textBoxVect[TEXTBOX_STRAT_START])->chageText("Chosen starting rule : SWAP");
 						//Starting strategy options are hidden now
-						(textBoxVect[TEXTBOX_STRAT_OPT])->setRendEnabled(false);
+						buttonVect[BUTTON_STRATEGY_SWAP]->setRendEnabled(false);
+						buttonVect[BUTTON_STRATEGY_SWAP2]->setRendEnabled(false);
 						//Piece counter is now shown
 						(textBoxVect[TEXTBOX_PIECENUM])->setRendEnabled(true);
+						showUI(textBoxVect,buttonVect);
 					}
 					else if (hasStratToChose &&(turnNr == 3 || (turnNr==5&&startStrat==STRATEGY_SWAP2)))
 					{
 						textBoxVect[TEXTBOX_STRAT_CHOICE]->setRendEnabled(false);
+						for(int i = BUTTON_DO_NOTHING;i<=BUTTON_PLACE_TWO;i++)
+							buttonVect[i]->setRendEnabled(false);
 						hasStratToChose = false;
 					}
 					break;
@@ -455,15 +480,19 @@ int main(int argc, char* args[])
 						startStrat = STRATEGY_SWAP2;
 						(textBoxVect[TEXTBOX_STRAT_START])->chageText("Chosen starting rule : SWAP2");
 						//Starting strategy options are hidden now
-						(textBoxVect[TEXTBOX_STRAT_OPT])->setRendEnabled(false);
+						buttonVect[BUTTON_STRATEGY_SWAP]->setRendEnabled(false);
+						buttonVect[BUTTON_STRATEGY_SWAP2]->setRendEnabled(false);
 						//Piece counter is now shown
 						(textBoxVect[TEXTBOX_PIECENUM])->setRendEnabled(true);
+						showUI(textBoxVect, buttonVect);
 					}
 					else if (hasStratToChose &&( turnNr == 3|| (turnNr == 5 && swap2choice3)))
 					{
 						playerTurn = playerTurn == PLAYER_ONE ? PLAYER_TWO : PLAYER_ONE;
 						hasStratToChose = false;
 						textBoxVect[TEXTBOX_STRAT_CHOICE]->setRendEnabled(false);
+						for (int i = BUTTON_DO_NOTHING; i <= BUTTON_PLACE_TWO; i++)
+							buttonVect[i]->setRendEnabled(false);
 					}
 					break;
 				case SDLK_3:
@@ -472,6 +501,8 @@ int main(int argc, char* args[])
 						swap2choice3 = true;
 						hasStratToChose = false;
 						textBoxVect[TEXTBOX_STRAT_CHOICE]->setRendEnabled(false);
+						for (int i = BUTTON_DO_NOTHING; i <= BUTTON_PLACE_TWO; i++)
+							buttonVect[i]->setRendEnabled(false);
 					}
 					break;
 				case SDLK_ESCAPE:
@@ -484,8 +515,8 @@ int main(int argc, char* args[])
 			}
 			//Clear window
 			gw.clear();
-			//If mouse event happened and the game is not over and a starting strategy is set
-			if ( !hasStratToChose && !win&& startStrat!=STRATEGY_NOT_SET && (e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN || e.type==SDL_MOUSEBUTTONUP))
+			//If mouse event happened
+			if (e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN || e.type==SDL_MOUSEBUTTONUP)
 			{
 				//Get mouse position
 				int x, y;
@@ -500,15 +531,15 @@ int main(int argc, char* args[])
 				else
 					SDL_GetMouseState(&x, &y);
 
-				//Set all unlocked grid squares to empty
-				for (int i = 0; i < GRID_HEIGHT*GRID_WIDTH; i++)
+				//Inside play area do smth only if the starting strategy is chosen and the game is not over
+				if (x < gameViewport.width() && !hasStratToChose && startStrat != STRATEGY_NOT_SET && !win)
 				{
-					gridSquares[i].setSprite(SQUARE_DEFAULT);
-				}
+					//Set all unlocked grid squares to empty
+					for (int i = 0; i < GRID_HEIGHT*GRID_WIDTH; i++)
+					{
+						gridSquares[i].setSprite(SQUARE_DEFAULT);
+					}
 
-				//Inside play area
-				if (x < gameViewport.width())
-				{
 					//Get square coordinates
 					x /= gridSquares[0].width();
 					y /= gridSquares[0].height();
@@ -549,7 +580,7 @@ int main(int argc, char* args[])
 										(textBoxVect[TEXTBOX_WINMSG])->chageText("Player Two won!");
 									}
 									textBoxVect[TEXTBOX_WINMSG]->setRendEnabled(true);
-									textBoxVect[TEXTBOX_CONTMSG]->setRendEnabled(true);
+									buttonVect[BUTTON_CONTINUE]->setRendEnabled(true);
 								}
 								else
 								{
@@ -577,18 +608,21 @@ int main(int argc, char* args[])
 									//Start of turn 4 choices
 									if (turnNr == 3)
 									{
-										if (startStrat == STRATEGY_SWAP)
-											textBoxVect[TEXTBOX_STRAT_CHOICE]->chageText("Choose: 1-nothing || 2-swap");
-										else
-											textBoxVect[TEXTBOX_STRAT_CHOICE]->chageText("Choose: 1-nothing || 2-swap || 3-place 2");
+										buttonVect[BUTTON_DO_NOTHING]->setRendEnabled(true);
+										buttonVect[BUTTON_SWAP]->setRendEnabled(true);
 										textBoxVect[TEXTBOX_STRAT_CHOICE]->setRendEnabled(true);
+										if (startStrat == STRATEGY_SWAP2)
+										{
+											buttonVect[BUTTON_PLACE_TWO]->setRendEnabled(true);
+										}
 										hasStratToChose = true;
 									}
 									//Start of turn 6 choices
 									else if (turnNr == 5 && swap2choice3)
 									{
 										hasStratToChose = true;
-										textBoxVect[TEXTBOX_STRAT_CHOICE]->chageText("Choose: 1-nothing || 2-swap");
+										buttonVect[BUTTON_DO_NOTHING]->setRendEnabled(true);
+										buttonVect[BUTTON_SWAP]->setRendEnabled(true);
 										textBoxVect[TEXTBOX_STRAT_CHOICE]->setRendEnabled(true);
 									}
 								}
@@ -611,12 +645,32 @@ int main(int argc, char* args[])
 						draw(textBoxVect,buttonVect);
 						win = true;
 					}
-					/*
+
+					//SDL event used to simulate a key press
 					SDL_Event sdlevent = {};
 					sdlevent.type = SDL_KEYDOWN;
-					sdlevent.key.keysym.sym = SDLK_LEFT;
-					SDL_PushEvent(&sdlevent);
-					*/
+					sdlevent.key.keysym.sym = NULL;
+
+					//Starting strategy
+					if (buttonVect[BUTTON_STRATEGY_SWAP]->isClicked())
+						sdlevent.key.keysym.sym = SDLK_1;
+					if (buttonVect[BUTTON_STRATEGY_SWAP2]->isClicked())
+						sdlevent.key.keysym.sym = SDLK_2;
+
+					//Strategy choices
+					if (buttonVect[BUTTON_DO_NOTHING]->isClicked())
+						sdlevent.key.keysym.sym = SDLK_1;
+					if (buttonVect[BUTTON_SWAP]->isClicked())
+						sdlevent.key.keysym.sym = SDLK_2;
+					if (buttonVect[BUTTON_PLACE_TWO]->isClicked())
+						sdlevent.key.keysym.sym = SDLK_3;
+					
+					//Continue button
+					if (buttonVect[BUTTON_CONTINUE]->isClicked())
+						sdlevent.key.keysym.sym = SDLK_r;
+					//Send keypress to event queue
+					if(sdlevent.key.keysym.sym != NULL)
+						SDL_PushEvent(&sdlevent);
 				}
 			}
 
