@@ -1,3 +1,8 @@
+/*Duncea Vlad Alexandru
+Grupa 144
+*/
+
+
 #pragma once
 #include <SDL.h>
 #include <SDL_image.h>

@@ -1,3 +1,9 @@
+/*Duncea Vlad Alexandru
+Grupa 144
+Fisier partial copiat de la http://lazyfoo.net/tutorials/SDL/16_true_type_fonts/index.php
+*/
+
+
 #pragma once
 #include <SDL.h>
 #include <SDL_image.h>

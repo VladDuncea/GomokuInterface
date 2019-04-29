@@ -1,3 +1,8 @@
+/*Duncea Vlad Alexandru
+Grupa 144
+Fisier partial copiat de la http://lazyfoo.net/tutorials/SDL/16_true_type_fonts/index.php
+*/
+
 #include "Texture.h"
 
 Texture::Texture(const GameWindow &gw) : privGameWindow(gw)

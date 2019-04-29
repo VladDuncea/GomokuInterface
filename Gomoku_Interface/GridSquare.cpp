@@ -1,3 +1,8 @@
+/*Duncea Vlad Alexandru
+Grupa 144
+*/
+
+
 #include "GridSquare.h"
 #include "Texture.h"
 

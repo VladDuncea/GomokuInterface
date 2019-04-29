@@ -1,3 +1,6 @@
+/*Duncea Vlad Alexandru
+Grupa 144
+*/
 #include "Button.h"
 
 Button::Button(Viewport& viewport, int height, int width, Texture* spriteSheet, SDL_Rect* spriteClips, TTF_Font* font, const char text[]) : privViewport(viewport),privBackground(spriteSheet),privText(viewport,text,font)
@@ -49,7 +52,6 @@ void Button::handleMouse(SDL_Event& e)
 			{
 				privState = privState == BUTTON_CLICK ? BUTTON_HOVER : BUTTON_CLICK;
 			}
-			//TODO handle click
 		}
 		else if (e.type == SDL_MOUSEBUTTONUP)
 		{

@@ -1,3 +1,8 @@
+/*Duncea Vlad Alexandru
+Grupa 144
+*/
+
+
 #include "GameWindow.h"
 
 GameWindow::GameWindow(int screen_width,int screen_height): SCREEN_HEIGHT(screen_height),SCREEN_WIDTH(screen_width)

@@ -1,3 +1,6 @@
+/*Duncea Vlad Alexandru
+Grupa 144
+*/
 #pragma once
 #include "GameWindow.h"
 class Viewport

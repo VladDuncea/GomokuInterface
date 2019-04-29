@@ -1,3 +1,8 @@
+/*Duncea Vlad Alexandru
+Grupa 144
+*/
+
+
 #pragma once
 #include <SDL_ttf.h>
 #include "Texture.h"

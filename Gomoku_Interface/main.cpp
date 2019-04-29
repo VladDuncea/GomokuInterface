@@ -1,3 +1,7 @@
+/*Duncea Vlad Alexandru 
+Grupa 144
+*/
+
 #include <iostream>
 #include "GameWindow.h"
 #include "Texture.h"
@@ -9,7 +13,7 @@
 #include "TextBox.h"
 #include "Button.h"
 
-constexpr auto SCALING = 0.9;
+constexpr auto SCALING = 1.5;
 //Grid variables
 constexpr auto GRID_WIDTH = 20;
 constexpr auto GRID_HEIGHT = 23;
@@ -200,8 +204,8 @@ void hideUI(std::vector<TextBox*> & textBoxVect, std::vector<Button*>& buttonVec
 void showUI(std::vector<TextBox*> & textBoxVect, std::vector<Button*>& buttonVect)
 {
 	textBoxVect[TEXTBOX_PTURN]->setRendEnabled(true);
-	buttonVect[BUTTON_DRAW_1]->setRendEnabled(true);
-	buttonVect[BUTTON_DRAW_2]->setRendEnabled(true);
+	//buttonVect[BUTTON_DRAW_1]->setRendEnabled(true);
+	//buttonVect[BUTTON_DRAW_2]->setRendEnabled(true);
 }
 
 bool initMenuUI(std::vector<TextBox*> & textBoxVect, std::vector<Button*>& buttonVect,Viewport &menuViewport)
@@ -284,12 +288,14 @@ bool initMenuUI(std::vector<TextBox*> & textBoxVect, std::vector<Button*>& butto
 	OneX = menuViewport.width() / 10 + BUTTON_SIZE_W / 2;
 	buttonDraw1->setRendCentered(true);
 	buttonDraw1->setToggle(true);
+	buttonDraw1->setRendEnabled(false);
 	buttonDraw1->setRenderPos(OneX, (int)(menuViewport.height() * 0.9));
 	buttonVect.push_back(buttonDraw1);
 	Button * buttonDraw2 = new Button(menuViewport, BUTTON_SIZE_H, BUTTON_SIZE_W, buttonSpriteSheet, buttonSpriteClips, fontNormal, "Draw");
 	TwoX = (int)(menuViewport.width()*0.9 - BUTTON_SIZE_W / 2);
 	buttonDraw2->setRendCentered(true);
 	buttonDraw2->setToggle(true);
+	buttonDraw2->setRendEnabled(false);
 	buttonDraw2->setRenderPos(TwoX,(int) (menuViewport.height()* 0.9));
 	buttonVect.push_back(buttonDraw2);
 
@@ -468,6 +474,8 @@ int main(int argc, char* args[])
 					}
 					else if (hasStratToChose &&(turnNr == 3 || (turnNr==5&&startStrat==STRATEGY_SWAP2)))
 					{
+						buttonVect[BUTTON_DRAW_1]->setRendEnabled(true);
+						buttonVect[BUTTON_DRAW_2]->setRendEnabled(true);
 						textBoxVect[TEXTBOX_STRAT_CHOICE]->setRendEnabled(false);
 						for(int i = BUTTON_DO_NOTHING;i<=BUTTON_PLACE_TWO;i++)
 							buttonVect[i]->setRendEnabled(false);
@@ -490,6 +498,8 @@ int main(int argc, char* args[])
 					{
 						playerTurn = playerTurn == PLAYER_ONE ? PLAYER_TWO : PLAYER_ONE;
 						hasStratToChose = false;
+						buttonVect[BUTTON_DRAW_1]->setRendEnabled(true);
+						buttonVect[BUTTON_DRAW_2]->setRendEnabled(true);
 						textBoxVect[TEXTBOX_STRAT_CHOICE]->setRendEnabled(false);
 						for (int i = BUTTON_DO_NOTHING; i <= BUTTON_PLACE_TWO; i++)
 							buttonVect[i]->setRendEnabled(false);
